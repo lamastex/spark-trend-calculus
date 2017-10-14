@@ -101,13 +101,13 @@ For that purpose, I'm using a version of [Goose](https://github.com/GravityLabs/
 
 Those are the news events that happened on those dates, at those places, 
 and that were identified as breaking news articles with regards to either `ENV_OIL` or `ENV_GAS`. 
-I reckon I should de-noise this data by looking at the text content, applying some NLP and topic modeling, 
+I reckon I should de-noise this data by looking at the text content, applying some NLP and topic modeling perhaps, 
 but the second top most article is of a great value already as clearly, piracy off the Ivory coast should have 
-strong negative impact in the oil and gas markets.
+strong impact in the oil and gas markets. 
 
 ![PIRACY](/images/piracy.jpg)
 
-Well, now I have enriched my raw data with articles I know could have serious impact on the markets. 
+I have now enriched my raw data with articles I know could have serious impact on the markets. 
 I will (hopefully) be using this information later when inferring series of events that could affect oil and gas price.
 
 <a name="NETWORK"></a>
@@ -157,7 +157,7 @@ Also, in addition of the community, I execute a simple PageRank as a direct meas
 
 #### Extracting communities
 
-Here are few examples of different communities I managed to extract (Download [pdf](/images/graph.pdf) for a more detailed picture)
+Here are few examples of different communities I managed to extract though my implementation of WCC algorithm (Download [pdf](/images/graph.pdf) for a more detailed picture)
 
 ![GRAPH](/images/graph.png)
 
@@ -192,8 +192,8 @@ Not a surprise, Donald Trump is a big player in our graph, and is close to the c
 
 Interestingly, we have some Russian / Ukranian politician names in here. 
 Also Laurent Fabius as ex minister of foreign affairs in France at that time. 
-While the main community in that graph is around Donald Trump, Vladimir Putin, Barack obama, etc., 
-the second most important community seems to be about Europe, Middle East and African countries (first 20 records below).
+Whilst the main community is around the big players (Donald Trump, Vladimir Putin, Barack obama, John Kerry, Bashar Al Assad, etc.), 
+the second most important community seems to be about Europe and African countries (first 20 records below).
 
 ```
 +------------------+
@@ -222,7 +222,7 @@ the second most important community seems to be about Europe, Middle East and Af
 +------------------+
 ```
 
-The first observation is that oil and gas does not seem to be a single market, but multiple. 
+The first observation is that oil and gas does not seem to be one single market, but multiple. 
 I'm not an expert, but I know at least 3 indices for benchmarking crude oil
 
 - **WTI**: Refers to oil extracted from wells in the U.S. and sent via pipeline to Cushing, Oklahoma
@@ -231,10 +231,10 @@ I'm not an expert, but I know at least 3 indices for benchmarking crude oil
 
 ![crude_oil_globe](/images/crude_oil_globe.jpg)
 
-It seems that those defined communities (US + Russia, Europe + MiddleEast, etc.) 
-could be a direct observable of those different markets. The fact that goodluck Jonhattan and muhammadu buhari
- (former and actual president of Nigeria) are "close" to Angela Merkel, 
- David Cameron and Francois Hollande confirms this theory (Nigeria is part of OPEC).
+It seems that those defined communities (US + Russia, Europe + Africa, etc.) 
+could be seen as a definition of those different markets. The fact that goodluck Jonhattan and muhammadu buhari
+ (resp. former and actual president of Nigeria) are "close" to Angela Merkel, 
+ David Cameron and Francois Hollande confirms my theory (Nigeria is part of OPEC by the way).
 
 <a name="INFERENCE"></a>
 ## Detecting trends in the oil and gas market
@@ -243,7 +243,7 @@ Now comes the last bit to get a successful startup.
 
 We've been able to extract major news articles around oil and gas, 
 we know the group of people connected together, 
-the different markets these influencers are dealing with, 
+the different markets these oil & gas influencers are dealing with, 
 it is time to enter to the heart of the subject and look at crude oil price. 
 
 I use the brent index provided by [QUANDL](https://www.quandl.com/collections/markets/crude-oil).
@@ -253,11 +253,11 @@ I use the brent index provided by [QUANDL](https://www.quandl.com/collections/ma
 The technique I am using to detect trends was invented from a friend of mine -  [TrendCalculus](https://bitbucket.org/bytesumo/trendcalculus-public). 
 
 The concept is to find all the highs and lows in my timeseries data, 
-finding the highest high and lowest low in each moving window. I use a window of a 30 days, expecting to find 36 highs and lows occurring 
-between 2014 and 2017, transforming a raw series into a series of trends.
+finding the highest high and lowest low occurring in each moving window. I use a window of a 30 days, expecting to find 36 highs and lows  
+between 2014 and 2017, transforming my raw series into a series of trends.
 
 Once the trends are identified, I extract the reversals, i.e. the highest high and lowest low that were observed 
-before a flip of a trend (from rising to falling). I report few dates below.
+before a flip of a trend (moving from rising to falling). I report few dates below.
 
 ```
 +-----+--------------------+-----+
@@ -277,29 +277,36 @@ before a flip of a trend (from rising to falling). I report few dates below.
 +-----+--------------------+-----+
 ```
 
-My hypothesis is that there might be something on the news that could have explained those trend reversals.
+My hypothesis is the following: 
+- *There might be a breaking news event captured on Gdelt that could have explained those trend reversals*
 
 ![BRENT2](/images/brent_H_L.png)
 
 ## Inference
 
-The rest is pure theory here, as I'm realistically not able to progress much further in the remaining 20mn, but here is my idea:
+The rest is pure theory here, as I'm not able to progress much further in the remaining 20mn, but here is my idea:
 
-- Enrich our initial data set with the reversals detected from the BRENT series
-- Retrieve all the articles I scraped for most of the breaking news articles about oil and gas
-- Hopefully the dates just work fine, I know plenty of articles that could have cause the market to rise or fall
-- I deduplicate those articles, group them into "stories" (i.e. covered by many articles) and find out the one that is contextually close
+- Enrich my initial data with the trend reversals detected from the BRENT series
+- Retrieve all the articles I scraped from most of the breaking news articles
+- Hopefully the dates just work fine, I now have plenty of articles that could have caused the market to rise or fall
+- I deduplicate those articles, group them into "stories" (i.e. covered by many articles) and find out the ones that are contextually close to Person, Organisation, Theme, etc.
 - Thanks to GKG (though I could extract those from a simple NER tagger), I know who is mentioned in those stories
 - I know who's connected to who, and who's dealing with what market
 - I know the influence an event may have in a community
-- I should be able to build a labeled data set to train a simple classifier (I'd say Naive Bayes here). 
+- I should be able to build a labeled data set in order to train a simple classifier. 
 
-I will know what event happened in what country, what was the impact in what community, and will predict the positive or negative effect on the crude oild market.
-By exporting my model, I can apply the same in near real time (GDELT data is published every 15mn) so that I will be able to detect rise and fall as the events unfold.
+## Conclusion
 
+With enough time, I could train a computer to understand what event happened in what country, 
+what was the impact in what community, 
+and predict the positive or negative effect in the crude oil markets.
+
+Finally, by exporting my model, I can apply the same in near real time (GDELT data is published every 15mn) 
+so that I will be able to detect rise and fall as the events unfold.
+
+This is my product, this is texata.ai!
 
 Thank you!
-Antoine
 
 
 
