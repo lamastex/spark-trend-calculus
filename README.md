@@ -23,73 +23,89 @@ political events in the oil market?*
 <a name="TIMESERIES"></a>
 ## Time Series analysis
 
-My first EDA approach will consist on the following
+My approach will consist on the following
 
-Extract all event Ids from GKG that relate to OIL or GAS (resp. ENV_OIL and ENV_GAS cameo code)
-Retrieve all events from EVENT related to the above by joining 2 datasets
-Plot both the goldstein scale and number of articles over time per country
+- Extract all event Ids from GKG that relate to oil or gas (resp. `ENV_OIL` and `ENV_GAS` cameo code)
+- Retrieve all events from EVENT related to the above by joining 2 datasets (massive `JOIN` operation)
+- Extract the media coverage as a normalized (zscore) number of articles by country
+- Plot both the goldstein scale and number of articles over time grouped by country
+
+Below example shows the (normalized) media coverage for both France and United Kingdom with regards to oil and gas.
 
 ![EVENT](/images/FR_UK_OIL-events.png)
 
-That way, I can quickly eye ball a potential outbreak related to oil and gas market. Programmatically, I normalize timeseries of number of articles (ZScore) and extract top 1000 dates with most inportant events. The idea is then to enrich the full dataset with the event that took place those dates. Some interesting results below. As a side note, normalizing the number of events at the country level overcome the constraint of media coverage (certain countries should not be penalized because of Russia, US, UK, etc. having better coverage with regards to oil and gas)
+That way, I can quickly eye ball any potential outbreak related to the oil and gas markets. 
+Programmatically, I normalize timeseries of number of articles and extract top 1000 dates with most important events . 
+
+The idea is then to enrich the full dataset with the events that took place on those dates, at these places. Some interesting results below. 
 
 ```
-+-------------------+-------+------------------+
-|               date|country|          articles|
-+-------------------+-------+------------------+
-|2016-03-03 00:00:00|     NC|13.662072684496462|
-|2016-04-14 00:00:00|     MJ|13.414666979122172|
-|2016-02-25 00:00:00|     NC|12.405574670546713|
-|2014-09-25 00:00:00|     SU|  9.48863214818537|
-|2015-07-30 00:00:00|     GA|  9.29919393241244|
-|2016-01-21 00:00:00|     SZ| 8.868822058237168|
-|2016-07-07 00:00:00|     FJ| 8.484678646900855|
-|2017-08-03 00:00:00|     VE|  8.31103934678676|
-|2017-07-27 00:00:00|     VE|  8.02805049313106|
-|2017-02-23 00:00:00|     MY| 8.022447901213992|
-|2015-03-12 00:00:00|     MP| 8.000639172377282|
-|2016-04-07 00:00:00|     MJ| 7.972090458950071|
-|2016-02-25 00:00:00|     IV| 7.945543203860656|
-|2015-07-09 00:00:00|     EC|7.7897667107480775|
-|2016-05-05 00:00:00|     CA|  7.56970466851033|
-|2015-01-15 00:00:00|     MC| 7.471498021926732|
-|2016-01-14 00:00:00|     IR|7.2391919471156125|
-|2016-07-14 00:00:00|     CH| 7.145798060874983|
-|2016-07-14 00:00:00|     RP| 7.072568219684949|
-|2015-07-23 00:00:00|     GA| 6.950294549668176|
-+-------------------+-------+------------------+
++-----------+-------+------------------+
+|       date|country|          coverage|
++-----------+-------+------------------+
+|2016-03-03 |     NC|13.662072684496462|
+|2016-04-14 |     MJ|13.414666979122172|
+|2016-02-25 |     NC|12.405574670546713|
+|2014-09-25 |     SU|  9.48863214818537|
+|2015-07-30 |     GA|  9.29919393241244|
+|2016-01-21 |     SZ| 8.868822058237168|
+|2016-07-07 |     FJ| 8.484678646900855|
+|2017-08-03 |     VE|  8.31103934678676|
+|2017-07-27 |     VE|  8.02805049313106|
+|2017-02-23 |     MY| 8.022447901213992|
+|2015-03-12 |     MP| 8.000639172377282|
+|2016-04-07 |     MJ| 7.972090458950071|
+|2016-02-25 |     IV| 7.945543203860656|
+|2015-07-09 |     EC|7.7897667107480775|
+|2016-05-05 |     CA|  7.56970466851033|
+|2015-01-15 |     MC| 7.471498021926732|
+|2016-01-14 |     IR|7.2391919471156125|
+|2016-07-14 |     CH| 7.145798060874983|
+|2016-07-14 |     RP| 7.072568219684949|
+|2015-07-23 |     GA| 6.950294549668176|
++-----------+-------+------------------+
 ```
 
-Extracting the top 1000, I can safely pull all articles from online websites on those days, for these countries, around OIL and GAS. I simply need to join back to original dataset. The list of URL I can get back is around 20K large. On my 10 nodes cluster, I reckon it should take around 30mn to scrape all those. I retrieve only the first 10'000 and build a webscraper properly distributed across my 10 nodes.
+- I extracted only the top 1,000 (in order to limit the number of articles to fetch in a 4h time competition)
+- I can safely pull all articles from online websites using URL in Gdelt. 
+- I simply need to join back to original dataset. 
+- The list of URL I can get back is around 30K large. 
+- On my 10 nodes cluster, I reckon it should take around 30mn to scrape all those. 
+- I retrieve only one third and build a web scraper properly distributed across my 10 nodes.
+
+For that purpose, I'm using a version of [Goose](https://github.com/GravityLabs/goose/wiki) scraper that I recompiled for Scala 2.11
 
 ```
-+-------+---------+---------------------------------------------------------------------------------------------------------+----------+----+
-|country|goldstein|title                                                                                                    |date      |abs |
-+-------+---------+---------------------------------------------------------------------------------------------------------+----------+----+
-|BL     |-10.0    |Pope's 'homecoming' tour moves from Ecuador to Bolivia                                                   |2015-07-08|10.0|
-|IV     |-10.0    |One pirate killed, four arrested after raid on hijacked ship                                             |2016-02-22|10.0|
-|NO     |10.0     |Copter fuselage retrieved, search still on for missing                                                   |2016-04-30|10.0|
-|VE     |-10.0    |Several nations see Venezuela vote as a sham--Aleteia                                                    |2017-07-31|10.0|
-|MY     |-10.0    |North Korean diplomat warned to cooperate in Kim Jong Un’s alleged assassination investigation - National|2017-02-25|10.0|
-|SZ     |-10.0    |22,000 Islamic State jihadists have been killed by coalition, France claims                              |2016-01-22|10.0|
-|EC     |-10.0    |Pope's 'homecoming' tour moves from Ecuador to Bolivia                                                   |2015-07-08|10.0|
-|IR     |-10.0    |The Other News: Ayatollah Ali Khamenei                                                                   |2016-01-11|10.0|
-|MP     |8.0      |India to fund key Mauritian infrastructure projects                                                      |2015-03-12|8.0 |
-|AQ     |7.0      |Southern California monuments would be spared, six others would be reduced – Daily News                  |2017-09-19|7.0 |
-|GA     |7.0      |Morris grateful for LDM help in fire rescue                                                              |2015-07-31|7.0 |
-|FM     |4.0      |Africa and Asia forge stronger alliances                                                                 |2016-08-30|4.0 |
-|NC     |2.8      |Marquesas Islands, French Polynesia: How to get to the world's most remote islands                       |2016-03-04|2.8 |
-|SU     |1.9      |S. Korea holds send-off ceremony for U.N. mission to South Sudan                                         |2014-09-23|1.9 |
-+-------+---------+---------------------------------------------------------------------------------------------------------+----------+----+
++-------+---------+---------------------------------------------------------------------------------------------------------+----------+
+|country|goldstein|title                                                                                                    |date      |
++-------+---------+---------------------------------------------------------------------------------------------------------+----------+
+|BL     |-10.0    |Pope's 'homecoming' tour moves from Ecuador to Bolivia                                                   |2015-07-08|
+|IV     |-10.0    |One pirate killed, four arrested after raid on hijacked ship                                             |2016-02-22|
+|NO     |10.0     |Copter fuselage retrieved, search still on for missing                                                   |2016-04-30|
+|VE     |-10.0    |Several nations see Venezuela vote as a sham--Aleteia                                                    |2017-07-31|
+|MY     |-10.0    |North Korean diplomat warned to cooperate in Kim Jong Un’s alleged assassination investigation - National|2017-02-25|
+|SZ     |-10.0    |22,000 Islamic State jihadists have been killed by coalition, France claims                              |2016-01-22|
+|EC     |-10.0    |Pope's 'homecoming' tour moves from Ecuador to Bolivia                                                   |2015-07-08|
+|IR     |-10.0    |The Other News: Ayatollah Ali Khamenei                                                                   |2016-01-11|
+|MP     |8.0      |India to fund key Mauritian infrastructure projects                                                      |2015-03-12|
+|AQ     |7.0      |Southern California monuments would be spared, six others would be reduced – Daily News                  |2017-09-19|
+|GA     |7.0      |Morris grateful for LDM help in fire rescue                                                              |2015-07-31|
+|FM     |4.0      |Africa and Asia forge stronger alliances                                                                 |2016-08-30|
+|NC     |2.8      |Marquesas Islands, French Polynesia: How to get to the world's most remote islands                       |2016-03-04|
+|SU     |1.9      |S. Korea holds send-off ceremony for U.N. mission to South Sudan                                         |2014-09-23|
++-------+---------+---------------------------------------------------------------------------------------------------------+----------+
 ```
 
-Those are the news events on those dates, for those identified OIL and GAS events. I reckon we should de-noise the data of GKG, but the second top most article above is already of a great value. Basically shows a possible correlation of a piracy in the Somalia coast to the OIL and GAS market.
+Those are the news events that happened on those dates, at those places, 
+and that were identified as breaking news articles with regards to either `ENV_OIL` or `ENV_GAS`. 
+I reckon I should de-noise this data by looking at the text content, applying some NLP and topic modeling, 
+but the second top most article above is of a great value already as clearly, piracy off the Ivory coast should have 
+strong negative impact in the oil and gas markets.
 
 ![PIRACY](/images/piracy.jpg)
 
-Well, now I have enriched GDELT dataset with articles I know may have had serious impact on the OIL and GAS market for some countries. I will (hopefully) be using this information when inferring oil and gas price.
-
-Let's move to the second topic from now, the OIL and GAS influencers.
+Well, now I have enriched my raw dataset with articles I know could have serious impact on the markets. 
+I will (hopefully) be using this information later when inferring series of events that affect oil and gas price.
 
 <a name="NETWORK"></a>
 ## Network Analysis
