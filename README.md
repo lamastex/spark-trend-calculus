@@ -20,8 +20,8 @@ influencers in the different oil and gas markets?*
 in crude oil (BRENT and OPEC), can you define the influence of a series of successive 
 political events in the oil market?*
 
-##Time Series analysis
 <a name="TIMESERIES"></a>
+## Time Series analysis
 
 My first EDA approach will consist on the following
 
@@ -91,8 +91,8 @@ Well, now I have enriched GDELT dataset with articles I know may have had seriou
 
 Let's move to the second topic from now, the OIL and GAS influencers.
 
-## NETWORK ANALYSIS
 <a name="NETWORK"></a>
+## Network Analysis
 
 The idea here is to look at possible connections in the oil and gas market, turning GKG into graph that can be analyse further. My end goal here is to find relations, infer communities, and finding out the countries / locations that those key people belong to / act upon. Together with the list of events I extracted from above, I'll be able to see the influence on a particular event in this network graph, finding out possible alliances
 
@@ -231,8 +231,8 @@ Once the trends are identified, I extract the reversals, i.e. the highest high o
 Also attached in the code, please refer to picture brent_H_L.png
 ![BRENT2](/images/brent_H_L.png)
 
-## INFERENCE
 <a name="INFERENCE"></a>
+## Inference
 
 The rest is pure theory here, as I'm realistically not able to build a successful startup in the next 20mn, but here is my idea:
 
