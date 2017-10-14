@@ -9,7 +9,7 @@ Extract all event Ids from GKG that relate to OIL or GAS (resp. ENV_OIL and ENV_
 Retrieve all events from EVENT related to the above by joining 2 datasets
 Plot both the goldstein scale and number of articles over time per country
 
-![Pathogen](/images/FR_UK_OIL-events.png)
+![EVENT](/images/FR_UK_OIL-events.png)
 
 That way, I can quickly eye ball a potential outbreak related to oil and gas market. Programmatically, I normalize timeseries of number of articles (ZScore) and extract top 1000 dates with most inportant events. The idea is then to enrich the full dataset with the event that took place those dates. Some interesting results below. As a side note, normalizing the number of events at the country level overcome the constraint of media coverage (certain countries should not be penalized because of Russia, US, UK, etc. having better coverage with regards to oil and gas)
 
@@ -77,8 +77,9 @@ First, I extract all GKG events related to OIL and GAS.
 
 In term of community detection, due to the scale of the problem, this must be done in parallel. I have two different approaches I may be using here
 
-WCC connections http://arxiv.org/pdf/1411.0557.pdf
-Louvain modularity https://arxiv.org/pdf/0803.0476.pdf
+- WCC connections [http://arxiv.org/pdf/1411.0557.pdf](http://arxiv.org/pdf/1411.0557.pdf)
+- Louvain modularity [https://arxiv.org/pdf/0803.0476.pdf](https://arxiv.org/pdf/0803.0476.pdf)
+
 My graph contains ~2,000,000 vertices, ~78,000,000 edges, with each node having 70 connections in average. Although I'm not concerned processing this graph, I feel concerned processing this graph in the remaining 1h and 40mn. For the sake of the competition, I'll remove all connections with less than 100 articles in common between 2 different persons. This is done by collecting degree of each node and remove the appropriate edge and nodes
 
 
@@ -104,7 +105,7 @@ In addition of the community, I execute a simple PageRank as an "influencer" sco
 
 Here are few examples of different communities 
 
-![Pathogen](/images/graph.pdf)
+![GRAPH](/images/graph.png)
 
 #### Communities
 
@@ -182,7 +183,7 @@ The technique I am using is TrendCalculus. https://bitbucket.org/bytesumo/trend
 
 The implementation is mine and available on the submitted code. The concept is to find all the highs and lows in my timeseries data, finding the highest high and lowest low in each moving window. For that purpose, I use a window of a 30 days, expecting to find all highs and lows occurring between 2014 and 2017, transforming that time series as a series of trends.
 
-![Pathogen](/images/brent.png)
+![BRENT1](/images/brent.png)
 
 Once the trends are identified, I extract the reversals, i.e. the highest high or lowest low that were observed before the trend flip (from rising to decreasing). I report few dates below
 
@@ -205,7 +206,7 @@ Once the trends are identified, I extract the reversals, i.e. the highest high o
 ```
 
 Also attached in the code, please refer to picture brent_H_L.png
-![Pathogen](/images/brent_H_L.png)
+![BRENT2](/images/brent_H_L.png)
 
 ## CONNECTING THE DOTS
 
