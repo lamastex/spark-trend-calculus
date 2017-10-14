@@ -225,27 +225,39 @@ the second most important community seems to be about Europe, Middle East and Af
 The first observation is that oil and gas does not seem to be a single market, but multiple. 
 I'm not an expert, but I know at least 3 indices for benchmarking crude oil
 
-- WTI: Refers to oil extracted from wells in the U.S. and sent via pipeline to Cushing, Oklahoma
-- BRENT: Produced by various entities in the north sea
-- OPEC: Produced by member of the OPEC (Algeria, Angola, Ecuador, Gabon, Iran, Irak, Kuwait, Libya, Nigeria, etc..)
+- **WTI**: Refers to oil extracted from wells in the U.S. and sent via pipeline to Cushing, Oklahoma
+- **BRENT**: Produced by various entities in the north sea
+- **OPEC**: Produced by member of the OPEC (Algeria, Angola, Ecuador, Gabon, Iran, Irak, Kuwait, Libya, Nigeria, etc..)
 
 ![crude_oil_globe](/images/crude_oil_globe.jpg)
 
-This graph could show these markets as well defined communities (US + Russia, Europe + MiddleEast)
+It seems that those defined communities (US + Russia, Europe + MiddleEast, etc.) 
+could be a direct observable of those different markets. The fact that goodluck Jonhattan and muhammadu buhari
+ (former and actual president of Nigeria) are "close" to Angela Merkel, 
+ David Cameron and Francois Hollande confirms this theory (Nigeria is part of OPEC).
 
-The fact that goodluck Jonhattan and muhammadu buhari (former and actual president of Nigeria) are "close" to Angela Merkel, David Cameron and Francois Hollande could confirm this theory.
+<a name="INFERENCE"></a>
+## Detecting trends in the oil and gas market
 
-## DETECTING TRENDS IN OIL AND GAS
+Now comes the last bit to get a successful startup. 
 
-Now the last bit to get a successful startup. We've been able to extract major news articles around OIL and GAS, we know the group of people connected together, and we potentially extracted the different markets these players are dealing with, it is time to enter to the heart of the subject and look at crude oil price. I use the provided brent data from QUANDL and try to detect trends.
+We've been able to extract major news articles around oil and gas, 
+we know the group of people connected together, 
+the different markets these influencers are dealing with, 
+it is time to enter to the heart of the subject and look at crude oil price. 
 
-The technique I am using is TrendCalculus. https://bitbucket.org/bytesumo/trendcalculus-public
-
-The concept is to find all the highs and lows in my timeseries data, finding the highest high and lowest low in each moving window. For that purpose, I use a window of a 30 days, expecting to find all highs and lows occurring between 2014 and 2017, transforming that time series as a series of trends.
+I use the brent index provided by [QUANDL](https://www.quandl.com/collections/markets/crude-oil).
 
 ![BRENT1](/images/brent.png)
 
-Once the trends are identified, I extract the reversals, i.e. the highest high or lowest low that were observed before the trend flip (from rising to decreasing). I report few dates below
+The technique I am using to detect trends was invented from a friend of mine -  [TrendCalculus](https://bitbucket.org/bytesumo/trendcalculus-public). 
+
+The concept is to find all the highs and lows in my timeseries data, 
+finding the highest high and lowest low in each moving window. I use a window of a 30 days, expecting to find 36 highs and lows occurring 
+between 2014 and 2017, transforming a raw series into a series of trends.
+
+Once the trends are identified, I extract the reversals, i.e. the highest high and lowest low that were observed 
+before a flip of a trend (from rising to falling). I report few dates below.
 
 ```
 +-----+--------------------+-----+
@@ -265,25 +277,28 @@ Once the trends are identified, I extract the reversals, i.e. the highest high o
 +-----+--------------------+-----+
 ```
 
-Also attached in the code, please refer to picture brent_H_L.png
+My hypothesis is that there might be something on the news that could have explained those trend reversals.
+
 ![BRENT2](/images/brent_H_L.png)
 
-<a name="INFERENCE"></a>
 ## Inference
 
-The rest is pure theory here, as I'm realistically not able to build a successful startup in the next 20mn, but here is my idea:
+The rest is pure theory here, as I'm realistically not able to progress much further in the remaining 20mn, but here is my idea:
 
-- Enrich our initial dataframe with the reversal points detected from the BRENT timeseries
-- I have raw content that I scraped for most of breaking news articles in the OIL GAS GDELT data
-- Hopefully the dates just work fine, I know what articles may have cause the market to rise or fall
-- I know who's connected to who, and to what market
+- Enrich our initial data set with the reversals detected from the BRENT series
+- Retrieve all the articles I scraped for most of the breaking news articles about oil and gas
+- Hopefully the dates just work fine, I know plenty of articles that could have cause the market to rise or fall
+- I deduplicate those articles, group them into "stories" (i.e. covered by many articles) and find out the one that is contextually close
+- Thanks to GKG (though I could extract those from a simple NER tagger), I know who is mentioned in those stories
+- I know who's connected to who, and who's dealing with what market
 - I know the influence an event may have in a community
-- I should be able to build enough label data to train a simple classifier (I'd say Naive Bayes here). I will know what event in what country, impacting what community will have a positive or negative effect on the crude oild market.
+- I should be able to build a labeled data set to train a simple classifier (I'd say Naive Bayes here). 
 
-By exporting my model, I can apply on the 15mn GDELT data so that I will be able to detect rise and fall in near real time.
+I will know what event happened in what country, what was the impact in what community, and will predict the positive or negative effect on the crude oild market.
+By exporting my model, I can apply the same in near real time (GDELT data is published every 15mn) so that I will be able to detect rise and fall as the events unfold.
+
 
 Thank you!
-
 Antoine
 
 
