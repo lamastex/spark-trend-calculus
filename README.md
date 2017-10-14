@@ -27,7 +27,7 @@ My approach will consist on the following
 
 - Extract all event Ids from GKG that relate to oil or gas (resp. `ENV_OIL` and `ENV_GAS` cameo code)
 - Retrieve all events from EVENT related to the above by joining 2 datasets (massive `JOIN` operation)
-- Extract the media coverage as a normalized (zscore) number of articles by country
+- Extract the media coverage as a normalized number of articles by country
 - Plot both the goldstein scale and number of articles over time grouped by country
 
 Below example shows the (normalized) media coverage for both France and United Kingdom with regards to oil and gas.
@@ -35,7 +35,8 @@ Below example shows the (normalized) media coverage for both France and United K
 ![EVENT](/images/FR_UK_OIL-events.png)
 
 That way, I can quickly eye ball any potential outbreak related to the oil and gas markets. 
-Programmatically, I normalize timeseries of number of articles and extract top 1000 dates with most important events . 
+Programmatically, I define my coverage as a zscore of number of articles per country and extract 
+top 1000 tuple country / dates with in term of mass coverage. 
 
 The idea is then to enrich the full dataset with the events that took place on those dates, at these places. Some interesting results below. 
 
