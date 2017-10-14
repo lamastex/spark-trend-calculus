@@ -2,7 +2,21 @@
 
 ![HEADER](/images/header.png)
 
-## EXTRACTING EVENTS
+You are the technical co-founder of a new start-up called texata.ai. This business was founded to leverage the vast source of news information available on the internet in order to better predict geo political instability in exporting countries, turning these events into actionable insights that can be used as financial instruments in the oil and gas markets. Using the GDELT (global database of events language and tone) dataset provided, conduct analysis relevant to the three business situations below. 
+
+##[Time Series analysis](#TIMESERIES)
+About to raise a first seed investment of $350K, you have to demonstrate the value of big data and data science to potential investors by detecting major riots and conflicts in exporting countries.
+*Using the GDELT event dataset, can you train a computer to detect arising conflicts in a particular region of the globe at the early stage of a political instability?*
+
+## <a name="NETWORK"></a> Network analysis
+texata.ai is now successfully launched and you are about to raise a further $500K as a series-A funding. Your business co-founder is keen to explore the concept of “oil influencers”, where offer and demand in crude oil could be explained through a series of connections existing between different events, actors, countries and organizations. 
+*Using the GDELT global knowledge graph database and the game of alliances that exists between different regimes and world leaders, can you identify the main influencers in the different oil and gas markets?*
+
+## <a name="INFERENCE"></a> Inference
+Congratulations, texata.ai has been live for a year now. As expected, it starts to get a lot of traction from hedge funds willing to explore the applicability of your insights in the oil & gas market.
+*Given your newly acquired domain expertise together with the provided benchmarks in crude oil (BRENT and OPEC), can you define the influence of a series of successive political events in the oil market?*
+
+##<a name="TIMESERIES">Time Series analysis</a>
 
 My first EDA approach will consist on the following
 
