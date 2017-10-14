@@ -103,7 +103,7 @@ This now reduces my graph to ~18,000 vertices, 330,000 edges and an average of 1
 
 In addition of the community, I execute a simple PageRank as an "influencer" score. 
 
-Here are few examples of different communities 
+Here are few examples of different communities (better resolution [here](/images/graph.pdf))
 
 ![GRAPH](/images/graph.png)
 
