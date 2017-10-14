@@ -66,6 +66,8 @@ Extracting the top 1000, I can safely pull all articles from online websites on 
 
 Those are the news events on those dates, for those identified OIL and GAS events. I reckon we should de-noise the data of GKG, but the second top most article above is already of a great value. Basically shows a possible correlation of a piracy in the Somalia coast to the OIL and GAS market.
 
+![PIRACY](/images/piracy.jpg)
+
 Well, now I have enriched GDELT dataset with articles I know may have had serious impact on the OIL and GAS market for some countries. I will (hopefully) be using this information when inferring oil and gas price.
 
 Let's move to the second topic from now, the OIL and GAS influencers.
