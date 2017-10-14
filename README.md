@@ -215,12 +215,12 @@ Also attached in the code, please refer to picture brent_H_L.png
 
 The rest is pure theory here, as I'm realistically not able to build a successful startup in the next 20mn, but here is my idea:
 
-Enrich our initial dataframe with the reversal points detected from the BRENT timeseries
-I have raw content that I scraped for most of breaking news articles in the OIL GAS GDELT data
-Hopefully the dates just work fine, I know what articles may have cause the market to rise or fall
-I know who's connected to who, and to what market
-I know the influence an event may have in a community
-I should be able to build enough label data to train a simple classifier (I'd say Naive Bayes here). I will know what event in what country, impacting what community will have a positive or negative effect on the crude oild market.
+- Enrich our initial dataframe with the reversal points detected from the BRENT timeseries
+- I have raw content that I scraped for most of breaking news articles in the OIL GAS GDELT data
+- Hopefully the dates just work fine, I know what articles may have cause the market to rise or fall
+- I know who's connected to who, and to what market
+- I know the influence an event may have in a community
+- I should be able to build enough label data to train a simple classifier (I'd say Naive Bayes here). I will know what event in what country, impacting what community will have a positive or negative effect on the crude oild market.
 
 By exporting my model, I can apply on the 15mn GDELT data so that I will be able to detect rise and fall in near real time.
 
