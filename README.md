@@ -184,7 +184,7 @@ Now the last bit to get a successful startup. We've been able to extract major n
 
 The technique I am using is TrendCalculus. https://bitbucket.org/bytesumo/trendcalculus-public
 
-The implementation is mine and available on the submitted code. The concept is to find all the highs and lows in my timeseries data, finding the highest high and lowest low in each moving window. For that purpose, I use a window of a 30 days, expecting to find all highs and lows occurring between 2014 and 2017, transforming that time series as a series of trends.
+The concept is to find all the highs and lows in my timeseries data, finding the highest high and lowest low in each moving window. For that purpose, I use a window of a 30 days, expecting to find all highs and lows occurring between 2014 and 2017, transforming that time series as a series of trends.
 
 ![BRENT1](/images/brent.png)
 
