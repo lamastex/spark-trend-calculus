@@ -1,3 +1,6 @@
+# Texata 2017 - Round 2
+
+
 ## EXTRACTING EVENTS
 
 My first EDA approach will consist on the following
@@ -5,10 +8,12 @@ My first EDA approach will consist on the following
 Extract all event Ids from GKG that relate to OIL or GAS (resp. ENV_OIL and ENV_GAS cameo code)
 Retrieve all events from EVENT related to the above by joining 2 datasets
 Plot both the goldstein scale and number of articles over time per country
-//FIGURE: Have a look at FR_UK_OIL-events.png
+
+![Pathogen](/images/FR_UK_OIL-events.png)
 
 That way, I can quickly eye ball a potential outbreak related to oil and gas market. Programmatically, I normalize timeseries of number of articles (ZScore) and extract top 1000 dates with most inportant events. The idea is then to enrich the full dataset with the event that took place those dates. Some interesting results below. As a side note, normalizing the number of events at the country level overcome the constraint of media coverage (certain countries should not be penalized because of Russia, US, UK, etc. having better coverage with regards to oil and gas)
 
+```
 +-------------------+-------+------------------+
 |               date|country|          articles|
 +-------------------+-------+------------------+
@@ -33,9 +38,11 @@ That way, I can quickly eye ball a potential outbreak related to oil and gas ma
 |2016-07-14 00:00:00|     RP| 7.072568219684949|
 |2015-07-23 00:00:00|     GA| 6.950294549668176|
 +-------------------+-------+------------------+
+```
 
 Extracting the top 1000, I can safely pull all articles from online websites on those days, for these countries, around OIL and GAS. I simply need to join back to original dataset. The list of URL I can get back is around 20K large. On my 10 nodes cluster, I reckon it should take around 30mn to scrape all those. I retrieve only the first 10'000 and build a webscraper properly distributed across my 10 nodes.
 
+```
 +-------+---------+---------------------------------------------------------------------------------------------------------+----------+----+
 |country|goldstein|title                                                                                                    |date      |abs |
 +-------+---------+---------------------------------------------------------------------------------------------------------+----------+----+
@@ -54,6 +61,7 @@ Extracting the top 1000, I can safely pull all articles from online websites on 
 |NC     |2.8      |Marquesas Islands, French Polynesia: How to get to the world's most remote islands                       |2016-03-04|2.8 |
 |SU     |1.9      |S. Korea holds send-off ceremony for U.N. mission to South Sudan                                         |2014-09-23|1.9 |
 +-------+---------+---------------------------------------------------------------------------------------------------------+----------+----+
+```
 
 Those are the news events on those dates, for those identified OIL and GAS events. I reckon we should de-noise the data of GKG, but the second top most article above is already of a great value. Basically shows a possible correlation of a piracy in the Somalia coast to the OIL and GAS market.
 
@@ -74,6 +82,7 @@ Louvain modularity https://arxiv.org/pdf/0803.0476.pdf
 My graph contains ~2,000,000 vertices, ~78,000,000 edges, with each node having 70 connections in average. Although I'm not concerned processing this graph, I feel concerned processing this graph in the remaining 1h and 40mn. For the sake of the competition, I'll remove all connections with less than 100 articles in common between 2 different persons. This is done by collecting degree of each node and remove the appropriate edge and nodes
 
 
+```scala
   val subgraph = graph.subgraph(
     (et: EdgeTriplet[String, Long]) => et.attr > 100,
     (_, vData: String) => true
@@ -87,6 +96,7 @@ My graph contains ~2,000,000 vertices, ~78,000,000 edges, with each node having 
   ).mapVertices({ case (vId, (vData, vDeg)) =>
     vData
   })
+```
 
 This now reduces my graph to ~18,000 vertices, 330,000 edges and an average of 11 connections. This filter allows me to move on with the community detection using WCC. The interesting thing around WCC is the approach they use, directly inspired from social networks. Because communities are group of vertices that are tightly coupled, they should share a larger number of triangles among themselves that they share across different groups. 
 
@@ -94,10 +104,13 @@ In addition of the community, I execute a simple PageRank as an "influencer" sco
 
 Here are few examples of different communities 
 
+![Pathogen](/images/graph.pdf)
+
 #### Communities
 
 Not a surprise, Donald Trump is in our graph, and is center of the most important community (top 20 displayed below)
 
+```
 +-----------------+
 |           person|
 +-----------------+
@@ -122,9 +135,11 @@ Not a surprise, Donald Trump is in our graph, and is center of the most importan
 |   lincoln chafee|
 |   laurent fabius|
 +-----------------+
+```
 
 Interestingly, we have some Russian / Ukranian politician names in here. Also Laurent Fabius as ex minister in France. While the main community in that graph is around Donald Trump, Vladimir Putin and Barack obama, the second most important community is about Europe and Middle East countries (first 20 records below).
 
+```
 +------------------+
 |            person|
 +------------------+
@@ -149,6 +164,7 @@ Interestingly, we have some Russian / Ukranian politician names in here. Also La
 |federica mogherini|
 |     darren palmer|
 +------------------+
+```
 
 What is interesting is that OIL and GAS is not one market, but multiple. I'm not an expert, but I know 2 indices for benchmarking crude oil
 
@@ -166,8 +182,11 @@ The technique I am using is TrendCalculus. https://bitbucket.org/bytesumo/trend
 
 The implementation is mine and available on the submitted code. The concept is to find all the highs and lows in my timeseries data, finding the highest high and lowest low in each moving window. For that purpose, I use a window of a 30 days, expecting to find all highs and lows occurring between 2014 and 2017, transforming that time series as a series of trends.
 
+![Pathogen](/images/brent.png)
+
 Once the trends are identified, I extract the reversals, i.e. the highest high or lowest low that were observed before the trend flip (from rising to decreasing). I report few dates below
 
+```
 +-----+--------------------+-----+
 |trend|                   x|    y|
 +-----+--------------------+-----+
@@ -183,8 +202,10 @@ Once the trends are identified, I extract the reversals, i.e. the highest high o
 | HIGH|2016-10-19 00:00:...|51.85|
 |  LOW|2016-11-13 00:00:...|41.61|
 +-----+--------------------+-----+
+```
 
 Also attached in the code, please refer to picture brent_H_L.png
+![Pathogen](/images/brent_H_L.png)
 
 ## CONNECTING THE DOTS
 
