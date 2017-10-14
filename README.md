@@ -30,15 +30,17 @@ My approach will consist on the following
 - Extract the media coverage as a normalized number of articles by country
 - Plot both the goldstein scale and number of articles over time grouped by country
 
+### Media coverage
+
 Below example shows the (normalized) media coverage for both France and United Kingdom with regards to oil and gas.
 
 ![EVENT](/images/FR_UK_OIL-events.png)
 
 That way, I can quickly eye ball any potential outbreak related to the oil and gas markets. 
-Programmatically, I define my coverage as a zscore of number of articles per country and extract 
-top 1000 tuple country / dates with in term of mass coverage. 
+Programmatically, I define the coverage as the zscore function of the number of articles per country, and extract 
+top 1000 tuples country / dates (1000 most massively covered events). 
 
-The idea is then to enrich the full dataset with the events that took place on those dates, at these places. Some interesting results below. 
+The idea is then to enrich the full data with the events that took place on those dates, at these places. 
 
 ```
 +-----------+-------+------------------+
@@ -68,13 +70,13 @@ The idea is then to enrich the full dataset with the events that took place on t
 ```
 
 - I extracted only the top 1,000 (in order to limit the number of articles to fetch in a 4h time competition)
-- I can safely pull all articles from online websites using URL in Gdelt. 
-- I simply need to join back to original dataset. 
-- The list of URL I can get back is around 30K large. 
-- On my 10 nodes cluster, I reckon it should take around 30mn to scrape all those. 
-- I retrieve only one third and build a web scraper properly distributed across my 10 nodes.
+- I can safely fetch all articles from online websites using the URLs provided in data model. 
+- The list of URLs I get back is around 30K large. On my 10 nodes cluster, I reckon it should take around 30mn to scrape all of those. 
+- I only fetch the first third and build an efficient web scraper that I distribute across my 10 nodes.
 
-For that purpose, I'm using a version of [Goose](https://github.com/GravityLabs/goose/wiki) scraper that I recompiled for Scala 2.11
+### Fetching HTML content
+
+For that purpose, I'm using a version of [Goose](https://github.com/GravityLabs/goose/wiki) that I recompiled for Scala 2.11
 
 ```
 +-------+---------+---------------------------------------------------------------------------------------------------------+----------+
@@ -100,27 +102,38 @@ For that purpose, I'm using a version of [Goose](https://github.com/GravityLabs/
 Those are the news events that happened on those dates, at those places, 
 and that were identified as breaking news articles with regards to either `ENV_OIL` or `ENV_GAS`. 
 I reckon I should de-noise this data by looking at the text content, applying some NLP and topic modeling, 
-but the second top most article above is of a great value already as clearly, piracy off the Ivory coast should have 
+but the second top most article is of a great value already as clearly, piracy off the Ivory coast should have 
 strong negative impact in the oil and gas markets.
 
 ![PIRACY](/images/piracy.jpg)
 
-Well, now I have enriched my raw dataset with articles I know could have serious impact on the markets. 
-I will (hopefully) be using this information later when inferring series of events that affect oil and gas price.
+Well, now I have enriched my raw data with articles I know could have serious impact on the markets. 
+I will (hopefully) be using this information later when inferring series of events that could affect oil and gas price.
 
 <a name="NETWORK"></a>
 ## Network Analysis
 
-The idea here is to look at possible connections in the oil and gas market, turning GKG into graph that can be analyse further. My end goal here is to find relations, infer communities, and finding out the countries / locations that those key people belong to / act upon. Together with the list of events I extracted from above, I'll be able to see the influence on a particular event in this network graph, finding out possible alliances
+The idea here is to look at the possible connections in the oil and gas markets, 
+turning GKG into social graph that can be analysed further. 
+My end goal here is to extract relations, infer communities, and find out the common denominator among communities. 
+Together with the list of raw articles I managed to extract earlier, 
+I should be able to see the influence a particular event may have in this network graph.
 
-First, I extract all GKG events related to OIL and GAS.
+First, I extract all GKG events related to `ENV_OIL` or `ENV_GAS`.
 
-In term of community detection, due to the scale of the problem, this must be done in parallel. I have two different approaches I may be using here
+In term of community detection, due to the scale of the problem (see below figures), this must be done in parallel. 
+I have two possible alternative
 
-- WCC connections [http://arxiv.org/pdf/1411.0557.pdf](http://arxiv.org/pdf/1411.0557.pdf)
-- Louvain modularity [https://arxiv.org/pdf/0803.0476.pdf](https://arxiv.org/pdf/0803.0476.pdf)
+- WCC detection: [http://arxiv.org/pdf/1411.0557.pdf](http://arxiv.org/pdf/1411.0557.pdf)
+- Louvain modularity: [https://arxiv.org/pdf/0803.0476.pdf](https://arxiv.org/pdf/0803.0476.pdf)
 
-My graph contains ~2,000,000 vertices, ~78,000,000 edges, with each node having 70 connections in average. Although I'm not concerned processing this graph, I feel concerned processing this graph in the remaining 1h and 40mn. For the sake of the competition, I'll remove all connections with less than 100 articles in common between 2 different persons. This is done by collecting degree of each node and remove the appropriate edge and nodes
+### Processing graph
+
+My graph contains around 2,000,000 vertices, 78,000,000 edges, with each node having 70 connections in average. 
+Although I'm not concerned processing this graph, 
+I feel concerned processing this graph in the remaining 1h and 40mn. 
+For the sake of the competition, I'll remove all edges with less than 100 articles in common between 2 different vertices (persons). 
+This can be achieved by first collecting the degrees of each node and then removing the appropriate edge and nodes
 
 
 ```scala
@@ -139,17 +152,16 @@ My graph contains ~2,000,000 vertices, ~78,000,000 edges, with each node having 
   })
 ```
 
-This now reduces my graph to ~18,000 vertices, 330,000 edges and an average of 11 connections. This filter allows me to move on with the community detection using WCC. The interesting thing around WCC is the approach they use, directly inspired from social networks. Because communities are group of vertices that are tightly coupled, they should share a larger number of triangles among themselves that they share across different groups. 
+This now reduces my dimensions down to ~18,000 vertices, 330,000 edges and an average of 11 connections per node. 
+Also, in addition of the community, I execute a simple PageRank as a direct measure of the "influencer" score. 
 
-In addition of the community, I execute a simple PageRank as an "influencer" score. 
+#### Extracting communities
 
-Here are few examples of different communities (better resolution [here](/images/graph.pdf))
+Here are few examples of different communities I managed to extract (Download [pdf](/images/graph.pdf) for a more detailed picture)
 
 ![GRAPH](/images/graph.png)
 
-#### Communities
-
-Not a surprise, Donald Trump is in our graph, and is center of the most important community (random first 20 displayed below)
+Not a surprise, Donald Trump is a big player in our graph, and is close to the center of the most important community (random first 20 displayed below)
 
 ```
 +-----------------+
@@ -178,7 +190,10 @@ Not a surprise, Donald Trump is in our graph, and is center of the most importan
 +-----------------+
 ```
 
-Interestingly, we have some Russian / Ukranian politician names in here. Also Laurent Fabius as ex minister in France. While the main community in that graph is around Donald Trump, Vladimir Putin and Barack obama, the second most important community is about Europe and Middle East countries (first 20 records below).
+Interestingly, we have some Russian / Ukranian politician names in here. 
+Also Laurent Fabius as ex minister of foreign affairs in France at that time. 
+While the main community in that graph is around Donald Trump, Vladimir Putin, Barack obama, etc., 
+the second most important community seems to be about Europe, Middle East and African countries (first 20 records below).
 
 ```
 +------------------+
@@ -207,10 +222,15 @@ Interestingly, we have some Russian / Ukranian politician names in here. Also La
 +------------------+
 ```
 
-What is interesting is that OIL and GAS is not one market, but multiple. I'm not an expert, but I know 2 indices for benchmarking crude oil
+The first observation is that oil and gas does not seem to be a single market, but multiple. 
+I'm not an expert, but I know at least 3 indices for benchmarking crude oil
 
-BRENT: Produced by various entities in the north sea
-OPEC: Produced by member of the OPEC (Algeria, Angola, Ecuador, Gabon, Iran, Irak, Kuwait, Libya, Nigeria, etc..)
+- WTI: Refers to oil extracted from wells in the U.S. and sent via pipeline to Cushing, Oklahoma
+- BRENT: Produced by various entities in the north sea
+- OPEC: Produced by member of the OPEC (Algeria, Angola, Ecuador, Gabon, Iran, Irak, Kuwait, Libya, Nigeria, etc..)
+
+![crude_oil_globe](/images/crude_oil_globe.jpg)
+
 This graph could show these markets as well defined communities (US + Russia, Europe + MiddleEast)
 
 The fact that goodluck Jonhattan and muhammadu buhari (former and actual president of Nigeria) are "close" to Angela Merkel, David Cameron and Francois Hollande could confirm this theory.
