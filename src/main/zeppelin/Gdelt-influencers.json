@@ -1,0 +1,538 @@
+﻿{
+  "paragraphs": [
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala",
+        "tableHide": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508000465959_-1880964309",
+      "id": "20171014-170105_1825339928",
+      "dateCreated": "2017-10-14T17:01:05+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:6614",
+      "text": "val inputGkg = \"s3://texata-round2/gdelt/gkg\"\nval inputEvent = \"s3://texata-round2/gdelt/events\"\n\nval eventDS = spark.read.gdeltEVENT(inputEvent)\nval gkgDS = spark.read.gdeltGKG(inputGkg)",
+      "dateUpdated": "2017-10-14T17:01:56+0000",
+      "dateFinished": "2017-10-14T17:01:31+0000",
+      "dateStarted": "2017-10-14T17:01:29+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\ninputGkg: String = s3://texata-round2/gdelt/gkg\n\ninputEvent: String = s3://texata-round2/gdelt/events\n\neventDS: org.apache.spark.sql.Dataset[com.aamend.texata.gdelt.EVENT] = [eventId: bigint, date: date ... 21 more fields]\n\ngkgDS: org.apache.spark.sql.Dataset[com.aamend.texata.gdelt.GKG] = [date: date, numArticles: int ... 9 more fields]\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508000489642_1990425097",
+      "id": "20171014-170129_803911467",
+      "dateCreated": "2017-10-14T17:01:29+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:6678",
+      "text": "import com.aamend.texata._\nval personRDD = gkgDS.filter(c => {\nc.themes.contains(\"ENV_GAS\") || c.themes.contains(\"ENV_OIL\")\n}).flatMap(f => {\nf.persons.flatMap(p1 => {\n  f.persons.filter(p2 => p2 != p1).map(p2 => {\n    ((p1, p2), f.numArticles.toLong)\n  })\n})\n}).rdd.reduceByKey(_+_).cache()\n\n",
+      "dateUpdated": "2017-10-14T17:17:26+0000",
+      "dateFinished": "2017-10-14T17:14:23+0000",
+      "dateStarted": "2017-10-14T17:06:32+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nimport com.aamend.texata._\n\npersonRDD: org.apache.spark.rdd.RDD[((String, String), Long)] = ShuffledRDD[506] at reduceByKey at <console>:96\n\ngraph: org.apache.spark.graphx.Graph[String,Long] = org.apache.spark.graphx.impl.GraphImpl@73f6487d\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508001340461_856184218",
+      "id": "20171014-171540_851117824",
+      "dateCreated": "2017-10-14T17:15:40+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:6984",
+      "text": "val graph = personRDD.toGraph()\ngraph.cache",
+      "dateUpdated": "2017-10-14T17:17:32+0000",
+      "dateFinished": "2017-10-14T17:17:54+0000",
+      "dateStarted": "2017-10-14T17:17:32+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\ngraph: org.apache.spark.graphx.Graph[String,Long] = org.apache.spark.graphx.impl.GraphImpl@4662fd2e\n\nres96: org.apache.spark.graphx.Graph[String,Long] = org.apache.spark.graphx.impl.GraphImpl@4662fd2e\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508000792119_1923492468",
+      "id": "20171014-170632_891464591",
+      "dateCreated": "2017-10-14T17:06:32+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:6776",
+      "text": "graph.vertices.count\ngraph.edges.count\ngraph.degrees.values.sum / graph.vertices.count",
+      "dateUpdated": "2017-10-14T17:18:09+0000",
+      "dateFinished": "2017-10-14T17:20:59+0000",
+      "dateStarted": "2017-10-14T17:18:09+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nres97: Long = 2112314\n\nres98: Long = 78356988\n\nres99: Double = 74.19066294121045\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508001307751_1667757566",
+      "id": "20171014-171507_456098962",
+      "dateCreated": "2017-10-14T17:15:07+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:6861",
+      "text": "import org.apache.spark.graphx.{EdgeTriplet, Graph}\nval subgraph = graph.subgraph(\n(et: EdgeTriplet[String, Long]) => et.attr > 1000,\n(_, vData: String) => true\n)\n\nval subGraphDeg = subgraph.outerJoinVertices(subgraph.degrees)((vId, vData, vDeg) => {\n(vData, vDeg.getOrElse(0))\n}).subgraph(\n(et: EdgeTriplet[(String, Int), Long]) => et.srcAttr._2 > 0 && et.dstAttr._2 > 0,\n(_, vData: (String, Int)) => vData._2 > 0\n).mapVertices({ case (vId, (vData, vDeg)) =>\nvData\n}).cache()\n\nsubGraphDeg.vertices.count\nsubGraphDeg.edges.count\nsubGraphDeg.degrees.values.sum / subGraphDeg.vertices.count",
+      "dateUpdated": "2017-10-14T17:37:35+0000",
+      "dateFinished": "2017-10-14T17:38:26+0000",
+      "dateStarted": "2017-10-14T17:37:35+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nimport org.apache.spark.graphx.{EdgeTriplet, Graph}\n\nsubgraph: org.apache.spark.graphx.Graph[String,Long] = org.apache.spark.graphx.impl.GraphImpl@55e8936a\n\nsubGraphDeg: org.apache.spark.graphx.Graph[String,Long] = org.apache.spark.graphx.impl.GraphImpl@36da0fb7\n\nres112: Long = 922\n\nres113: Long = 5346\n\nres114: Double = 11.596529284164859\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508001317763_863479123",
+      "id": "20171014-171517_1845661747",
+      "dateCreated": "2017-10-14T17:15:17+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:6926",
+      "text": "val wccGraph = subGraphDeg.louvain().cache()",
+      "dateUpdated": "2017-10-14T17:46:50+0000",
+      "dateFinished": "2017-10-14T17:51:13+0000",
+      "dateStarted": "2017-10-14T17:46:50+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nwccGraph: org.apache.spark.graphx.Graph[(String, Long),Long] = org.apache.spark.graphx.impl.GraphImpl@5f0d028c\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508003486722_-749028479",
+      "id": "20171014-175126_87379298",
+      "dateCreated": "2017-10-14T17:51:26+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7603",
+      "text": "val prVertices = wccGraph.pageRank(0.15).vertices\n  val prGraph = wccGraph.outerJoinVertices(prVertices)((_, vData, vPr) => {\n    (vData._1, vData._2, vPr.getOrElse(0.15))\n  })",
+      "dateUpdated": "2017-10-14T17:55:18+0000",
+      "dateFinished": "2017-10-14T17:55:30+0000",
+      "dateStarted": "2017-10-14T17:55:18+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nprVertices: org.apache.spark.graphx.VertexRDD[Double] = VertexRDDImpl[4263] at RDD at VertexRDD.scala:57\n\nprGraph: org.apache.spark.graphx.Graph[(String, Long, Double),Long] = org.apache.spark.graphx.impl.GraphImpl@3b3dabd8\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508003712888_593866131",
+      "id": "20171014-175512_1155703104",
+      "dateCreated": "2017-10-14T17:55:12+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7959",
+      "text": "prVertices.toDF().show",
+      "dateUpdated": "2017-10-14T17:55:33+0000",
+      "dateFinished": "2017-10-14T17:55:37+0000",
+      "dateStarted": "2017-10-14T17:55:33+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+--------------------+------------------+\n|                  _1|                _2|\n+--------------------+------------------+\n|-1097433810190742973|1.0000000000000004|\n|-7226412811198926859|1.0000000000000004|\n| 3045206282787798650|1.0000000000000004|\n|-7237872945662242169|1.0000000000000004|\n|-5321712199454861998|1.0000000000000004|\n| 8735549545327376262|1.0000000000000004|\n| 8223081395445789428|1.0000000000000004|\n| 4425446607498999068|1.0000000000000004|\n|-5745752302975025861|1.0000000000000004|\n|  595508346171031917|1.0000000000000004|\n|-1854280877140085794|1.0000000000000004|\n| 6667001337750354055|1.0000000000000004|\n| 3092674418480392924|1.0000000000000004|\n| 4786022390837510082|1.0000000000000004|\n| 1502858863154387400|1.0000000000000004|\n| 7474647856397192602|1.0000000000000004|\n| 6091689289007310276|1.0000000000000004|\n|  905554212738677508|1.0000000000000004|\n| 6546948422644068577|1.0000000000000004|\n| 2631129451197788429|1.0000000000000004|\n+--------------------+------------------+\nonly showing top 20 rows\n\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508003548322_1596274933",
+      "id": "20171014-175228_187170900",
+      "dateCreated": "2017-10-14T17:52:28+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7677",
+      "text": "prGraph.vertices.values.toDF(\"person\", \"community\", \"pageRank\").cache()\nval vertices = prGraph.vertices.values.toDF(\"person\", \"community\", \"pageRank\").cache()\nvertices.createOrReplaceTempView(\"gkg\")\nsqlContext.cacheTable(\"gkg\")",
+      "dateUpdated": "2017-10-14T18:02:52+0000",
+      "dateFinished": "2017-10-14T18:02:56+0000",
+      "dateStarted": "2017-10-14T18:02:52+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nres130: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [person: string, community: bigint ... 1 more field]\n\nvertices: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [person: string, community: bigint ... 1 more field]\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/sql"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508004176358_-2010456490",
+      "id": "20171014-180256_2038914498",
+      "dateCreated": "2017-10-14T18:02:56+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:8113",
+      "text": "%sql\nSELECT community, person FROM gkg\nWHERE person LIKE '%merkel%'",
+      "dateUpdated": "2017-10-14T18:09:06+0000",
+      "dateFinished": "2017-10-14T18:09:12+0000",
+      "dateStarted": "2017-10-14T18:09:06+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TABLE",
+            "data": "community\tperson\n-2209714333319565875\tangela merkel\n"
+          }
+        ]
+      }
+    },
+    {
+      "text": "vertices.filter(col(\"community\") === -2209714333319565875L).select(\"person\").show",
+      "user": "anonymous",
+      "dateUpdated": "2017-10-14T18:09:19+0000",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508004237346_2040857483",
+      "id": "20171014-180357_487694519",
+      "dateCreated": "2017-10-14T18:03:57+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:8265",
+      "dateFinished": "2017-10-14T18:09:26+0000",
+      "dateStarted": "2017-10-14T18:09:19+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+------------------+\n|            person|\n+------------------+\n|     dolly edwards|\n|     umaru yaradua|\n|       olisa metuh|\n|      ibe kachikwu|\n|       garba shehu|\n|    steven sotloff|\n|      lenin moreno|\n|    stephen harper|\n| goodluck jonathan|\n|       nnamdi kanu|\n|   paolo gentiloni|\n|  muhammadu buhari|\n|    pierre trudeau|\n|  yanis varoufakis|\n|enrique pena nieto|\n|     sylvie corbet|\n|    michael fallon|\n|   patrick hodgins|\n|federica mogherini|\n|     darren palmer|\n+------------------+\nonly showing top 20 rows\n\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508003596197_-1024188528",
+      "id": "20171014-175316_1371705624",
+      "dateCreated": "2017-10-14T17:53:16+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7806",
+      "text": "vertices.orderBy(desc(\"pageRank\")).filter(col(\"\")).select(\"person\").show(1000)",
+      "dateUpdated": "2017-10-14T17:56:10+0000",
+      "dateFinished": "2017-10-14T17:54:20+0000",
+      "dateStarted": "2017-10-14T17:54:17+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+--------------------+--------------------+------------------+\n|              person|           community|          pageRank|\n+--------------------+--------------------+------------------+\n|         mia kyricos|-5123806391895283158|1.0000000000000002|\n|         alex lawler|-5123806391895283158|1.0000000000000002|\n|     laurie bobillot|-7981629573227806010|1.0000000000000002|\n|       mahmoud abbas|-5123806391895283158|1.0000000000000002|\n|      ramzan kadyrov|-5123806391895283158|1.0000000000000002|\n|       enele sopoaga|-5123806391895283158|1.0000000000000002|\n|     michael wittner|-5888010320500233275|1.0000000000000002|\n|       igor shuvalov|-5123806391895283158|1.0000000000000002|\n|      mustafa akinci| 3045206282787798650|1.0000000000000002|\n|       dolly edwards|-2209714333319565875|1.0000000000000002|\n|       bharti airtel|-6411644534435696354|1.0000000000000002|\n|  amando tetangco jr| 1502858863154387400|1.0000000000000002|\n|     carsten fritsch|-5123806391895283158|1.0000000000000002|\n|            ada choi| 5602245785061237038|1.0000000000000002|\n|        jeff merkley|-6117186771910231345|1.0000000000000002|\n|        scott pruitt|-5123806391895283158|1.0000000000000002|\n|    diosdado cabello|-2498084582014429470|1.0000000000000002|\n|yashaswini swamyn...|-5888010320500233275|1.0000000000000002|\n|       navin ramdhun|-2446107919545999447|1.0000000000000002|\n|        barack obama|-5123806391895283158|1.0000000000000002|\n|        donald trump|-5123806391895283158|1.0000000000000002|\n|      steven mnuchin|-5123806391895283158|1.0000000000000002|\n|      tibisay lucena|-2498084582014429470|1.0000000000000002|\n|          sun pharma|-6411644534435696354|1.0000000000000002|\n|         mitt romney|-5123806391895283158|1.0000000000000002|\n|      anton siluanov|-5123806391895283158|1.0000000000000002|\n|      saud al-faisal|-5123806391895283158|1.0000000000000002|\n|       raul grijalva|-5123806391895283158|1.0000000000000002|\n|          joe straus|-8778605200936573775|1.0000000000000002|\n|      tashfeen malik| 2650009760157840387|1.0000000000000002|\n|         igor sechin|-5123806391895283158|1.0000000000000002|\n|       d-los angeles|-2209714333319565875|1.0000000000000002|\n|       paul ashworth|-5888010320500233275|1.0000000000000002|\n|       jamie stengle|-8778605200936573775|1.0000000000000002|\n|     fayez al-sarraj| 1554551611396352462|1.0000000000000002|\n|        yukiya amano|-4678795136086809460|1.0000000000000002|\n|      kevin mccarthy|-5123806391895283158|1.0000000000000002|\n|   ibrahim babangida|-2209714333319565875|1.0000000000000002|\n|         s las vegas|-5123806391895283158|1.0000000000000002|\n|      david petraeus|-5123806391895283158|1.0000000000000002|\n|    alexander korzun|-5123806391895283158|1.0000000000000002|\n|    mohammed ghobari|-7505950395755327245|1.0000000000000002|\n|     paolo gentiloni|-2209714333319565875|1.0000000000000002|\n|    muhammadu buhari|-2209714333319565875|1.0000000000000002|\n|      bernie sanders|-5123806391895283158|1.0000000000000002|\n|      harry s truman|-5123806391895283158|1.0000000000000002|\n|   henrique capriles|-2498084582014429470|1.0000000000000002|\n|      reince priebus|-5123806391895283158|1.0000000000000002|\n|        wes clark jr|-6817692648362739035|1.0000000000000002|\n|        mark ruffalo|-6817692648362739035|1.0000000000000002|\n|      steven sotloff|-2209714333319565875|1.0000000000000002|\n|       bernie sander|-5123806391895283158|1.0000000000000002|\n|      pierre trudeau|-2209714333319565875|1.0000000000000002|\n|        neil gorsuch|-5123806391895283158|1.0000000000000002|\n|    yanis varoufakis|-2209714333319565875|1.0000000000000002|\n|  enrique pena nieto|-2209714333319565875|1.0000000000000002|\n|             wang yi|-5123806391895283158|1.0000000000000002|\n|    thomas j donohue|-5123806391895283158|1.0000000000000002|\n|        dan sullivan|-7981629573227806010|1.0000000000000002|\n|         harold hamm|-5123806391895283158|1.0000000000000002|\n|        steve bannon|-5123806391895283158|1.0000000000000002|\n|          abu sayyaf|-8026554220441592583|1.0000000000000002|\n|         olisa metuh|-2209714333319565875|1.0000000000000002|\n|  federica mogherini|-2209714333319565875|1.0000000000000002|\n|          don canton|-6817692648362739035|1.0000000000000002|\n|         mark cooper|-5123806391895283158|1.0000000000000002|\n|     haruhiko kuroda|-5888010320500233275|1.0000000000000002|\n|             ben fox|-7981629573227806010|1.0000000000000002|\n|          ben rhodes|-5123806391895283158|1.0000000000000002|\n|         susan walsh|-5123806391895283158|1.0000000000000002|\n|       chuck schumer|-5123806391895283158|1.0000000000000002|\n|    luiz inacio lula|-2498084582014429470|1.0000000000000002|\n|          joye braun|-6817692648362739035|1.0000000000000002|\n|      chris christie|-2376203089953264870|1.0000000000000002|\n|          eric trump|-5123806391895283158|1.0000000000000002|\n|       boris nemtsov|-5123806391895283158|1.0000000000000002|\n|     mark zuckerberg|-5123806391895283158|1.0000000000000002|\n|       john barrasso|-5123806391895283158|1.0000000000000002|\n|     ernest scheyder| 3911199180912078623|1.0000000000000002|\n|        sean hannity|-5123806391895283158|1.0000000000000002|\n|       oceti sakowin|-6817692648362739035|1.0000000000000002|\n|       narendra modi|-5123806391895283158|1.0000000000000002|\n|         matthew lee|-5123806391895283158|1.0000000000000002|\n|     bradley klapper|-5123806391895283158|1.0000000000000002|\n|            joe batt|-5123806391895283158|1.0000000000000002|\n|         sami aboudi|  495912723314298339|1.0000000000000002|\n|        bassem mroue|-5123806391895283158|1.0000000000000002|\n|      matthew bishop|-6817692648362739035|1.0000000000000002|\n|        lenin moreno|-2209714333319565875|1.0000000000000002|\n|         aecio neves|-2498084582014429470|1.0000000000000002|\n|        kurt russell|-8311584980666851264|1.0000000000000002|\n|       olivier jakob|-6152157406336332429|1.0000000000000002|\n|      lincoln chafee|-5123806391895283158|1.0000000000000002|\n|      laurent fabius|-5123806391895283158|1.0000000000000002|\n|       jared kushner|-5123806391895283158|1.0000000000000002|\n|            jeb bush|-2376203089953264870|1.0000000000000002|\n|       erich neitzke| 8132684862963203237|1.0000000000000002|\n|       pete ricketts|-5123806391895283158|1.0000000000000002|\n|          tony blair|-2209714333319565875|1.0000000000000002|\n|        ali khamenei|-4678795136086809460|1.0000000000000002|\n|   viktor yanukovych|-5123806391895283158|1.0000000000000002|\n|        edward jones| 3092674418480392924|1.0000000000000002|\n|       umaru yaradua|-2209714333319565875|1.0000000000000002|\n|        beaufort sea|-7981629573227806010|1.0000000000000002|\n|           abu dhabi|-3222624696690863942|1.0000000000000002|\n|         stan lehman|-2498084582014429470|1.0000000000000002|\n|      john malkovich|-8311584980666851264|1.0000000000000002|\n|     catherine lucey|-8778605200936573775|1.0000000000000002|\n|        patrick rios|-8778605200936573775|1.0000000000000002|\n|      olzhas auyezov|-3222624696690863942|1.0000000000000002|\n|          salva kiir|-6664691230212547061|1.0000000000000002|\n|       bill mckibben|-5123806391895283158|1.0000000000000002|\n| meskwaki potawatomi|-6817692648362739035|1.0000000000000002|\n|    michael mccarthy|-5123806391895283158|1.0000000000000002|\n|          rick scott|-5123806391895283158|1.0000000000000002|\n|        jim prentice|-2209714333319565875|1.0000000000000002|\n|        jack richter|-2209714333319565875|1.0000000000000002|\n|       ralph goodale|-2209714333319565875|1.0000000000000002|\n|         evo morales|-2209714333319565875|1.0000000000000002|\n|          jingyi pan|-5123806391895283158|1.0000000000000002|\n|      john henderson|-6817692648362739035|1.0000000000000002|\n|       andrew puzder|-5123806391895283158|1.0000000000000002|\n| christopher johnson|-5123806391895283158|1.0000000000000002|\n|       david goldman|-6817692648362739035|1.0000000000000002|\n|       jason rezaian|-4678795136086809460|1.0000000000000002|\n|        steve bohlen|-2209714333319565875|1.0000000000000002|\n|       dave zaniboni|-2209714333319565875|1.0000000000000002|\n|       darren palmer|-2209714333319565875|1.0000000000000002|\n|        david haines|-2209714333319565875|1.0000000000000002|\n|         tom bossert|-8778605200936573775|1.0000000000000002|\n|      stephen harper|-2209714333319565875|1.0000000000000002|\n|       jesse jackson|-6817692648362739035|1.0000000000000002|\n|         hilda heine|-5123806391895283158|1.0000000000000002|\n|      jason chaffetz|-5123806391895283158|1.0000000000000002|\n|caroline valetkev...|-5888010320500233275|1.0000000000000002|\n|       sylvie corbet|-2209714333319565875|1.0000000000000002|\n|       deb riechmann|-5123806391895283158|1.0000000000000002|\n|           cody hall|-6817692648362739035|1.0000000000000002|\n|      judith leblanc|-6817692648362739035|1.0000000000000002|\n|          mary barra|-5123806391895283158|1.0000000000000002|\n|          rob keller|-6817692648362739035|1.0000000000000002|\n|         gerald ford|-5123806391895283158|1.0000000000000002|\n|  henrique meirelles|-2498084582014429470|1.0000000000000002|\n|         garba shehu|-2209714333319565875|1.0000000000000002|\n|        gary johnson|-5123806391895283158|1.0000000000000002|\n|         los angeles|-2209714333319565875|1.0000000000000002|\n|         rena fritch| 8132684862963203237|1.0000000000000002|\n|  sheldon whitehouse|-5123806391895283158|1.0000000000000002|\n|sarah huckabee sa...|-5123806391895283158|1.0000000000000002|\n|bijan namdar zang...|-5123806391895283158|1.0000000000000002|\n|        brett mcgurk|-5123806391895283158|1.0000000000000002|\n|      michael mcfaul|-5123806391895283158|1.0000000000000002|\n|         mark carney|-2209714333319565875|1.0000000000000002|\n|          peter berg|-8311584980666851264|1.0000000000000002|\n|      lucia mutikani|-2126595006563519305|1.0000000000000002|\n|           jim gomez|-3401558106062925973|1.0000000000000002|\n|     carl tannenbaum|-5888010320500233275|1.0000000000000002|\n|   christine armario|-2498084582014429470|1.0000000000000002|\n|         brian deese|-5123806391895283158|1.0000000000000002|\n|        ernest moniz|-5123806391895283158|1.0000000000000002|\n|      hilary clinton|-5123806391895283158|1.0000000000000002|\n|         betsy devos|-5123806391895283158|1.0000000000000002|\n|       jenny darnall| 8132684862963203237|1.0000000000000002|\n|america merrill l...|-5888010320500233275|1.0000000000000002|\n|       rush limbaugh|-5123806391895283158|1.0000000000000002|\n|    dianne feinstein|-2209714333319565875|1.0000000000000002|\n|   david rockefeller| 3434937228167692261|1.0000000000000002|\n|   goodluck jonathan|-2209714333319565875|1.0000000000000002|\n|         nnamdi kanu|-2209714333319565875|1.0000000000000002|\n|            kara sea|-5123806391895283158|1.0000000000000002|\n|     patrick hodgins|-2209714333319565875|1.0000000000000002|\n|      stephen bannon|-5123806391895283158|1.0000000000000002|\n|     angus nicholson|-5888010320500233275|1.0000000000000002|\n|      hermann goring|-2019257571715061722|1.0000000000000002|\n|      norman pickett| 8132684862963203237|1.0000000000000002|\n|     david fleischer|-2498084582014429470|1.0000000000000002|\n|         magne barth|-5123806391895283158|1.0000000000000002|\n|         carl vinson|-5123806391895283158|1.0000000000000002|\n|         james comey|-5123806391895283158|1.0000000000000002|\n|  juan manuel santos|-2498084582014429470|1.0000000000000002|\n|       mick mulvaney|-5123806391895283158|1.0000000000000002|\n|       sergei lavrov|-5123806391895283158|1.0000000000000002|\n|     katya golubkova|-5123806391895283158|1.0000000000000002|\n|    superstorm sandy|-8778605200936573775|1.0000000000000002|\n|         mary fallin|   74128748331539267|1.0000000000000002|\n|      michael fallon|-2209714333319565875|1.0000000000000002|\n|mohammed javad zarif|-5123806391895283158|1.0000000000000002|\n|       jan hasselman|-6817692648362739035|1.0000000000000002|\n|   arkady dvorkovich|-5123806391895283158|1.0000000000000002|\n|        jeff lindner|-8778605200936573775|1.0000000000000002|\n|           timor sea|-6143583190690227608|1.0000000000000002|\n|   mauricio savarese|-2498084582014429470|1.0000000000000002|\n|        robert speer|-6817692648362739035|1.0000000000000002|\n|          jim mattis|-5123806391895283158|1.0000000000000002|\n|          rob bishop|-5123806391895283158|1.0000000000000002|\n|            jim carr|-2209714333319565875|1.0000000000000002|\n|         mike pompeo|-5123806391895283158|1.0000000000000002|\n|        chris murphy|-5123806391895283158|1.0000000000000002|\n|    petro poroshenko|-5123806391895283158|1.0000000000000002|\n|jose eduardo cardozo|-2498084582014429470|1.0000000000000002|\n|        john donovan|-2019257571715061722|1.0000000000000002|\n|         ahsan iqbal|-5123806391895283158|1.0000000000000002|\n|        nestor silva|-6817692648362739035|1.0000000000000002|\n|       monte rogneby|-6817692648362739035|1.0000000000000002|\n|           ed emmett|-8778605200936573775|1.0000000000000002|\n|     abu dhabi crown|-3222624696690863942|1.0000000000000002|\n|      nicolas maduro|-2498084582014429470|1.0000000000000002|\n|      nasir el-rufai|-2209714333319565875|1.0000000000000002|\n|    brent borgstedte|-8778605200936573775|1.0000000000000002|\n|    muhyiddin yassin|-2209714333319565875|1.0000000000000002|\n|    societe generale|-5888010320500233275|1.0000000000000002|\n|ahmad kamarulzama...|-2446107919545999447|1.0000000000000002|\n|ricardo alonso-za...|-5123806391895283158|1.0000000000000002|\n|            hamad al|-5123806391895283158|1.0000000000000002|\n|          jacob zuma|-5757544779208025218|1.0000000000000002|\n|      leopoldo lopez|-2498084582014429470|1.0000000000000002|\n|       hideyuki sano|-5888010320500233275|1.0000000000000002|\n|        ibe kachikwu|-2209714333319565875|1.0000000000000002|\n|       rodrigo janot|-2498084582014429470|1.0000000000000002|\n|     antonio ledezma|-2498084582014429470|1.0000000000000002|\n|       xanana gusmao|-6143583190690227608|1.0000000000000002|\n|       vicki granado|-6817692648362739035|1.0000000000000002|\n|        jiang jiemin| 2958395493142850367|1.0000000000000002|\n|        barbara bush|-5123806391895283158|1.0000000000000002|\n|         kate hudson|-8311584980666851264|1.0000000000000002|\n|       hosni mubarak|-2209714333319565875|1.0000000000000002|\n|          terry wade| 3911199180912078623|1.0000000000000002|\n|        john boehner|-5123806391895283158|1.0000000000000002|\n|   francois delattre|-5123806391895283158|1.0000000000000002|\n|          ben cardin|-5123806391895283158|1.0000000000000002|\n|       maruti suzuki|-6411644534435696354|1.0000000000000002|\n|        matt skinner|   74128748331539267|1.0000000000000002|\n|        kevin mcgill|-2209714333319565875|1.0000000000000002|\n|         david jones|-5888010320500233275|1.0000000000000002|\n|       phyllis young|-6817692648362739035|1.0000000000000002|\n|      nick zieminski|-5888010320500233275|1.0000000000000002|\n|        andre penner|-2498084582014429470|1.0000000000000002|\n|         john bolton|-5123806391895283158|1.0000000000000002|\n|    delfin lorenzana|-3401558106062925973|1.0000000000000002|\n|          bob corker|-5123806391895283158|1.0000000000000002|\n|        russ girling|-5123806391895283158|1.0000000000000002|\n|      james boasberg|-6817692648362739035|1.0000000000000002|\n|         siti aisyah| 6373727152685515717|1.0000000000000002|\n|     brian youngberg| 3092674418480392924|1.0000000000000002|\n|  nichola saminather|-5123806391895283158|1.0000000000000002|\n|          harry reid|-5123806391895283158|1.0000000000000002|\n|           don young|-7981629573227806010|1.0000000000000002|\n| alhaji lai mohammed|-2209714333319565875|1.0000000000000002|\n|catherine reheis-...|-2209714333319565875|1.0000000000000002|\n|  john d rockefeller| 3434937228167692261|1.0000000000000002|\n|      ayodele fayose|-2209714333319565875|1.0000000000000002|\n|  vladimir soldatkin|-5123806391895283158|1.0000000000000002|\n|        harry truman|-5123806391895283158|1.0000000000000002|\n|  tarek william saab|-2498084582014429470|1.0000000000000002|\n|      harold frazier|-6817692648362739035|1.0000000000000002|\n|        tom fargione|-7405476888601717247|1.0000000000000002|\n|            ed royce|-5123806391895283158|1.0000000000000002|\n|  j scott applewhite|-5123806391895283158|1.0000000000000002|\n|     binali yildirim|-2209714333319565875|1.0000000000000002|\n|  darlene superville|-5123806391895283158|1.0000000000000002|\n|      adel al-jubeir|-5123806391895283158|1.0000000000000002|\n|       hannah dreier|-2498084582014429470|1.0000000000000002|\n|     dennis lockhart|-5888010320500233275|1.0000000000000002|\n|       ryan hignight|-6817692648362739035|1.0000000000000002|\n|         ryan sitton|-7405476888601717247|1.0000000000000002|\n|     eshaq jahangiri|-4678795136086809460|1.0000000000000002|\n|         dan patrick|-8778605200936573775|1.0000000000000002|\n|  mingpao roger kwok| 5602245785061237038|1.0000000000000002|\n|       josh lederman|-5123806391895283158|1.0000000000000002|\n|      jo-ellen darcy|-6817692648362739035|1.0000000000000002|\n|          jenna kemp|-5285211027918953228|1.0000000000000002|\n|     massoud barzani|-2209714333319565875|1.0000000000000002|\n|          jane kleeb|-5123806391895283158|1.0000000000000002|\n|        indian ocean|-2209714333319565875|1.0000000000000002|\n|        colin powell|-5123806391895283158|1.0000000000000002|\n|        rona ambrose|-2209714333319565875|1.0000000000000002|\n|           ali bongo|-9046669626393335991|1.0000000000000002|\n|           gary cohn|-5123806391895283158|1.0000000000000002|\n|   eric schneiderman|-5123806391895283158|1.0000000000000002|\n|abdel-fattah el-s...|-2209714333319565875|1.0000000000000002|\n|       fumio kishida|-3401558106062925973|1.0000000000000002|\n|         tom iverson|-6817692648362739035|1.0000000000000002|\n|       saeed abedini|-4678795136086809460|1.0000000000000002|\n|   chrystia freeland|-2209714333319565875|1.0000000000000002|\n|       marine le pen|-2209714333319565875|1.0000000000000002|\n|      tayyip erdogan|-5123806391895283158|1.0000000000000002|\n|hillary rodham cl...|-5123806391895283158|1.0000000000000002|\n|           ed murray|-7981629573227806010|1.0000000000000002|\n|        sara tarrant| 8132684862963203237|1.0000000000000002|\n|         cecily fong|-6817692648362739035|1.0000000000000002|\n|         fran pavley|-2209714333319565875|1.0000000000000002|\n|          ben carson|-2376203089953264870|1.0000000000000002|\n|globaldata global...|-5888010320500233275|1.0000000000000002|\n|        sally jewell|-6817692648362739035|1.0000000000000002|\n|          mark rutte|-5123806391895283158|1.0000000000000002|\n|       paul manafort|-5123806391895283158|1.0000000000000002|\n|         chuck hagel|-5123806391895283158|1.0000000000000002|\n|      jack dalrymple|-6817692648362739035|1.0000000000000002|\n|          mark zandi|-5888010320500233275|1.0000000000000002|\n|     timothy gardner|-5123806391895283158|1.0000000000000002|\n|        bobby jindal|-2376203089953264870|1.0000000000000002|\n|           elon musk|-5123806391895283158|1.0000000000000002|\n|   henning gloystein|-5123806391895283158|1.0000000000000002|\n|             el nino|-2209714333319565875|1.0000000000000002|\n|      maria cantwell|-7981629573227806010|1.0000000000000002|\n|          el capitan|-2209714333319565875|1.0000000000000002|\n|        nigel farage|-2209714333319565875|1.0000000000000002|\n|       rafael correa|-2209714333319565875|1.0000000000000002|\n|          robert bea|-2209714333319565875|1.0000000000000002|\n|    condoleezza rice|-5123806391895283158|1.0000000000000002|\n|         tony abbott|-2209714333319565875|1.0000000000000002|\n|        tammy webber|-8778605200936573775|1.0000000000000002|\n|   randolph t holhut|-5123806391895283158|1.0000000000000002|\n|        paul j weber|-8778605200936573775|1.0000000000000002|\n|        vijay mallya| 1371428353417041331|1.0000000000000002|\n|      khalifa hifter|-5123806391895283158|1.0000000000000002|\n|    nagorno karabakh|-3125135966719759319|1.0000000000000002|\n|         chris coons|-5123806391895283158|1.0000000000000002|\n|     saad al-hadithi|-4678795136086809460|1.0000000000000002|\n|     richard wiseman|-2019257571715061722|1.0000000000000002|\n|             el faro|-7981629573227806010|1.0000000000000002|\n|       mary landrieu|-5123806391895283158|1.0000000000000002|\n|    dave archambault|-6817692648362739035|1.0000000000000002|\n|     nicole winfield|-2209714333319565875|1.0000000000000002|\n|      philip hammond|-5123806391895283158|1.0000000000000002|\n|      rafael ramirez|-2498084582014429470|1.0000000000000002|\n|         eric tucker|-5123806391895283158|1.0000000000000002|\n|     wahid supriyadi|-4678795136086809460|1.0000000000000002|\n|      dilma rousseff|-2498084582014429470|1.0000000000000002|\n|       dave heineman|-5123806391895283158|1.0000000000000002|\n|          kanye west|-5123806391895283158|1.0000000000000002|\n|     george h w bush|-5123806391895283158|1.0000000000000002|\n|      john f kennedy|-5123806391895283158|1.0000000000000002|\n|       esther george|-5888010320500233275|1.0000000000000002|\n|      joseph dunford|-5123806391895283158|1.0000000000000002|\n|  anthony scaramucci|-5123806391895283158|1.0000000000000002|\n|       santa barbara|-2209714333319565875|1.0000000000000002|\n| john alfred donovan|-2019257571715061722|1.0000000000000002|\n|       jeremy corbyn|-2209714333319565875|1.0000000000000002|\n|mohammad javad zarif|-4678795136086809460|1.0000000000000002|\n|          ryan zinke|-5123806391895283158|1.0000000000000002|\n|      julian assange|-2209714333319565875|1.0000000000000002|\n|         greg abbott|-8778605200936573775|1.0000000000000002|\n|        savio dsouza|-5888010320500233275|1.0000000000000002|\n|  christopher bodeen|-3401558106062925973|1.0000000000000002|\n|          omar bongo|-9046669626393335991|1.0000000000000002|\n|       andrew harnik|-5123806391895283158|1.0000000000000002|\n|       rudy giuliani|-5123806391895283158|1.0000000000000002|\n|           jean ping|-9046669626393335991|1.0000000000000002|\n|    shailene woodley|-6817692648362739035|1.0000000000000002|\n|          al franken|-5123806391895283158|1.0000000000000002|\n|   alexis akwagyiram|-2209714333319565875|1.0000000000000002|\n|         dick cheney|-5123806391895283158|1.0000000000000002|\n|         john cornyn|-5123806391895283158|1.0000000000000002|\n|        david warren|-8778605200936573775|1.0000000000000002|\n|      martin dempsey|-5123806391895283158|1.0000000000000002|\n|          mark toner|-5123806391895283158|1.0000000000000002|\n|   jacqueline savitz|-7981629573227806010|1.0000000000000002|\n|         tom mulcair|-2209714333319565875|1.0000000000000002|\n|           gary ross|-5123806391895283158|1.0000000000000002|\n|         tom stromme|-5123806391895283158|1.0000000000000002|\n|     henri deterding|-2019257571715061722|1.0000000000000002|\n|       joseph aucoin|-2446107919545999447|1.0000000000000002|\n|           paul ryan|-5123806391895283158|1.0000000000000002|\n|           eliza sam| 5602245785061237038|1.0000000000000002|\n|       saleh al-sada|-5123806391895283158|1.0000000000000002|\n|    jens stoltenberg|-2209714333319565875|1.0000000000000002|\n|         marco rubio|-2376203089953264870|1.0000000000000002|\n|       sergei shoigu|-5123806391895283158|1.0000000000000002|\n|         john mccain|-5123806391895283158|1.0000000000000002|\n|        luis almagro|-2498084582014429470|1.0000000000000002|\n|      heidi heitkamp|-6817692648362739035|1.0000000000000002|\n|      uhuru kenyatta|-5123806391895283158|1.0000000000000002|\n|       jorge machaen| 8132684862963203237|1.0000000000000002|\n|       eduardo cunha|-2498084582014429470|1.0000000000000002|\n|       attahiru jega|-2209714333319565875|1.0000000000000002|\n|        asia pacific|-5888010320500233275|1.0000000000000002|\n|emmanuel ibe kach...|-2209714333319565875|1.0000000000000002|\n|          kerry kemp|-5285211027918953228|1.0000000000000002|\n|     kyle kirchmeier|-6817692648362739035|1.0000000000000002|\n|          jim inhofe|-5123806391895283158|1.0000000000000002|\n|         king salman|-5123806391895283158|1.0000000000000002|\n|       michael brune|-5123806391895283158|1.0000000000000002|\n|          mike duffy|-2209714333319565875|1.0000000000000002|\n|        curtis smith|-7981629573227806010|1.0000000000000002|\n|    elizabeth warren|-5123806391895283158|1.0000000000000002|\n|        beppe grillo|-2209714333319565875|1.0000000000000002|\n|        james inhofe|-5123806391895283158|1.0000000000000002|\n|         sergio moro|-2498084582014429470|1.0000000000000002|\n|        andrew cuomo|-5123806391895283158|1.0000000000000002|\n|      diana heidgerd|-8778605200936573775|1.0000000000000002|\n|     henry kissinger|-5123806391895283158|1.0000000000000002|\n|    gregor robertson|-2209714333319565875|1.0000000000000002|\n|        lora waraksa|-5285211027918953228|1.0000000000000002|\n|      justin trudeau|-2209714333319565875|1.0000000000000002|\n|frank-walter stei...|-4678795136086809460|1.0000000000000002|\n|         ed gonzalez|-8778605200936573775|1.0000000000000002|\n|         craig erlam|-5888010320500233275|1.0000000000000002|\n|          nana akufo|-6512094970004867610|1.0000000000000002|\n|      rania el gamal|-5123806391895283158|1.0000000000000002|\n|     bashar al-assad|-5123806391895283158|1.0000000000000002|\n|mikhail khodorkovsky|-5123806391895283158|1.0000000000000002|\n|   stephane dujarric|-5123806391895283158|1.0000000000000002|\n|         ho chi minh|-2325711285380119741|1.0000000000000002|\n|     james dalgleish|-5123806391895283158|1.0000000000000002|\n|    catherine ashton|-5123806391895283158|1.0000000000000002|\n|        jason dearen|-5123806391895283158|1.0000000000000002|\n|        gary herbert|-5123806391895283158|1.0000000000000002|\n|        eric schultz|-5123806391895283158|1.0000000000000002|\n|     naftali bennett|-4678795136086809460|1.0000000000000002|\n|    alexei ulyukayev|-5123806391895283158|1.0000000000000002|\n|          jay inslee|-5123806391895283158|1.0000000000000002|\n|          carl icahn|-5123806391895283158|1.0000000000000002|\n|        andrew getty|-2209714333319565875|1.0000000000000002|\n|       jeff sessions|-5123806391895283158|1.0000000000000002|\n|      rodrigo campos|-5888010320500233275|1.0000000000000002|\n|      bijan zanganeh|-5123806391895283158|1.0000000000000002|\n|      raghuram rajan|-5470782197706017503|1.0000000000000002|\n|         bill walker|-7981629573227806010|1.0000000000000002|\n|           joe biden|-5123806391895283158|1.0000000000000002|\n|           rand paul|-5123806391895283158|1.0000000000000002|\n|        cliven bundy|-5123806391895283158|1.0000000000000002|\n|   john schellnhuber|-5123806391895283158|1.0000000000000002|\n|     william maclean|  495912723314298339|1.0000000000000002|\n|        wesley clark|-6817692648362739035|1.0000000000000002|\n|    antonio guterres|-5123806391895283158|1.0000000000000002|\n|        mark liponis|-5123806391895283158|1.0000000000000002|\n|          mike flynn|-5123806391895283158|1.0000000000000002|\n|         rajya sabha|-5470782197706017503|1.0000000000000002|\n|       kayla mueller|-8026554220441592583|1.0000000000000002|\n|     abubakar shekau|-2209714333319565875|1.0000000000000002|\n|  benjamin netanyahu|-4678795136086809460|1.0000000000000002|\n|          laudato si|-2209714333319565875|1.0000000000000002|\n|     matthew rycroft|-5123806391895283158|1.0000000000000002|\n|         wilbur ross|-5123806391895283158|1.0000000000000002|\n|    john bel edwards|-8778605200936573775|1.0000000000000002|\n|      alexis tsipras|-2209714333319565875|1.0000000000000002|\n|         jason neely|-5123806391895283158|1.0000000000000002|\n| mary clare jalonick|-5123806391895283158|1.0000000000000002|\n|      freddy guevara|-2498084582014429470|1.0000000000000002|\n|      masoud barzani|-2209714333319565875|1.0000000000000002|\n|       anwar ibrahim|-2209714333319565875|1.0000000000000002|\n|         myron ebell|-5123806391895283158|1.0000000000000002|\n|       mark giuliano|-5285211027918953228|1.0000000000000002|\n|      alan greenspan|-5888010320500233275|1.0000000000000002|\n|  wolfgang schaeuble|-2209714333319565875|1.0000000000000002|\n|      sergio machado|-2498084582014429470|1.0000000000000002|\n|    mevlut cavusoglu|-5123806391895283158|1.0000000000000002|\n|   francois hollande|-2209714333319565875|1.0000000000000002|\n|        julio borges|-2498084582014429470|1.0000000000000002|\n|        jim drinkard|-5123806391895283158|1.0000000000000002|\n|   richard valdmanis|-5123806391895283158|1.0000000000000002|\n|        jimmy carter|-5123806391895283158|1.0000000000000002|\n|        kemi adeosun|-2209714333319565875|1.0000000000000002|\n|          tom steyer|-5123806391895283158|1.0000000000000002|\n|    reem shamseddine|-5123806391895283158|1.0000000000000002|\n|    mohammad khatami|-4678795136086809460|1.0000000000000002|\n|     anatoly antonov|-5123806391895283158|1.0000000000000002|\n|         felix onuah|-2209714333319565875|1.0000000000000002|\n|       andrew taylor|-5123806391895283158|1.0000000000000002|\n|abdel fattah al-sisi|-2209714333319565875|1.0000000000000002|\n|martin luther kin...|-5123806391895283158|1.0000000000000002|\n|       alexei kudrin|-5123806391895283158|1.0000000000000002|\n|       bako sahakyan|-3125135966719759319|1.0000000000000002|\n|janney montgomery...| 2056194467090207696|1.0000000000000002|\n|         megyn kelly|-5123806391895283158|1.0000000000000002|\n|       martin kobler|-5123806391895283158|1.0000000000000002|\n|         zeina karam|-5123806391895283158|1.0000000000000002|\n|   christopher weber|-2209714333319565875|1.0000000000000002|\n|       tanya agrawal|-5888010320500233275|1.0000000000000002|\n|      heather nauert|-5123806391895283158|1.0000000000000002|\n|        j paul getty|-2209714333319565875|1.0000000000000002|\n|   shinichi saoshiro|-5888010320500233275|1.0000000000000002|\n|fernando henrique...|-2498084582014429470|1.0000000000000002|\n|    kellyanne conway|-5123806391895283158|1.0000000000000002|\n|        adolf hitler|-2019257571715061722|1.0000000000000002|\n|    william scherman|-6817692648362739035|1.0000000000000002|\n|      lyndon johnson|-5123806391895283158|1.0000000000000002|\n|   michael biesecker|-5123806391895283158|1.0000000000000002|\n|         lech walesa|-5123806391895283158|1.0000000000000002|\n|     blake nicholson|-6817692648362739035|1.0000000000000002|\n|    vladimir padrino|-2498084582014429470|1.0000000000000002|\n|       gina mccarthy|-5123806391895283158|1.0000000000000002|\n|      susan sarandon|-6817692648362739035|1.0000000000000002|\n|     melissa munguia|-8778605200936573775|1.0000000000000002|\n|     guillermo lasso|-2209714333319565875|1.0000000000000002|\n|         raul castro|-5123806391895283158|1.0000000000000002|\n|       lael brainard|-5888010320500233275|1.0000000000000002|\n|    sylvester turner|-8778605200936573775|1.0000000000000002|\n|   marcelo odebrecht|-2498084582014429470|1.0000000000000002|\n|       zhou yongkang| 2958395493142850367|1.0000000000000002|\n|     robert menendez|-5123806391895283158|1.0000000000000002|\n|       hasan rouhani|-4678795136086809460|1.0000000000000002|\n|      jeffrey halley|-5123806391895283158|1.0000000000000002|\n|           lok sabha|-5470782197706017503|1.0000000000000002|\n|         eric meijer|-5888010320500233275|1.0000000000000002|\n|         john mahama|-6512094970004867610|1.0000000000000002|\n|      carolyn kaster|-5123806391895283158|1.0000000000000002|\n|             hun sen|-3401558106062925973|1.0000000000000002|\n|     alexander novak|-5123806391895283158|1.0000000000000002|\n|      alison redford|-2209714333319565875|1.0000000000000002|\n|           tim kaine|-5123806391895283158|1.0000000000000002|\n|     michael graczyk|-8778605200936573775|1.0000000000000002|\n|        alvaro uribe|-2498084582014429470|1.0000000000000002|\n|      lisa murkowski|-7981629573227806010|1.0000000000000002|\n|         theresa may|-2209714333319565875|1.0000000000000002|\n|         karl ritter|-5123806391895283158|1.0000000000000002|\n|     fethullah gulen|-2209714333319565875|1.0000000000000002|\n|        kelly ayotte|-5123806391895283158|1.0000000000000002|\n|       megan partlow|-2446107919545999447|1.0000000000000002|\n|        jon gambrell|-5123806391895283158|1.0000000000000002|\n|       michael flynn|-5123806391895283158|1.0000000000000002|\n|   rashid al maktoum|-3222624696690863942|1.0000000000000002|\n|         hablas espa|-2540231989603794937|1.0000000000000002|\n|      pravin gordhan|-5757544779208025218|1.0000000000000002|\n|        ivanka trump|-5123806391895283158|1.0000000000000002|\n|      charles whalen|-6817692648362739035|1.0000000000000002|\n|        laura powell|-5123806391895283158|1.0000000000000002|\n|     renan calheiros|-2498084582014429470|1.0000000000000002|\n|         liu zhenmin|-3401558106062925973|1.0000000000000002|\n|     ariana cubillos|-2498084582014429470|1.0000000000000002|\n|     donnell preskey|-6817692648362739035|1.0000000000000002|\n|          paul simao|-2126595006563519305|1.0000000000000002|\n|      rotimi amaechi|-2209714333319565875|1.0000000000000002|\n|     dmitry medvedev|-5123806391895283158|1.0000000000000002|\n|       peter navarro|-5123806391895283158|1.0000000000000002|\n|      russell begaye|-5123806391895283158|1.0000000000000002|\n|       babyjohn choi| 5602245785061237038|1.0000000000000002|\n|     brian ellsworth|-2498084582014429470|1.0000000000000002|\n|   tareck el aissami|-2498084582014429470|1.0000000000000002|\n|        mark randell|   74128748331539267|1.0000000000000002|\n|        bashar assad|-5123806391895283158|1.0000000000000002|\n|       george w bush|-5123806391895283158|1.0000000000000002|\n|        robert grady|-5123806391895283158|1.0000000000000002|\n|         riek machar|-6664691230212547061|1.0000000000000002|\n|        maura healey|-5123806391895283158|1.0000000000000002|\n|     hillary clinton|-5123806391895283158|1.0000000000000002|\n|        matteo renzi|-2209714333319565875|1.0000000000000002|\n|        janet yellen|-5888010320500233275|1.0000000000000002|\n|           ron wyden|-6117186771910231345|1.0000000000000002|\n|       christy clark|-2209714333319565875|1.0000000000000002|\n|franklin d roosevelt|-5123806391895283158|1.0000000000000002|\n|      michelle obama|-5123806391895283158|1.0000000000000002|\n|          kate warne| 3092674418480392924|1.0000000000000002|\n|      moamer kadhafi| 1554551611396352462|1.0000000000000002|\n|        arun jaitley|-5470782197706017503|1.0000000000000002|\n|        tanya gadbaw| 8132684862963203237|1.0000000000000002|\n|      david gregorio|-5123806391895283158|1.0000000000000002|\n|        robert gates|-5123806391895283158|1.0000000000000002|\n|         tom shannon|-5123806391895283158|1.0000000000000002|\n|         john kasich|-2376203089953264870|1.0000000000000002|\n|        jason miller|-5123806391895283158|1.0000000000000002|\n|        kim jong nam| 6373727152685515717|1.0000000000000002|\n|    andrew cawthorne|-2498084582014429470|1.0000000000000002|\n|       loretta lynch|-6817692648362739035|1.0000000000000002|\n|   danielle randolph|-7981629573227806010|1.0000000000000002|\n|      thomas mulcair|-2209714333319565875|1.0000000000000002|\n|         syed farook| 2650009760157840387|1.0000000000000002|\n|            mike lee|-5123806391895283158|1.0000000000000002|\n|   fulgencio batista|-5123806391895283158|1.0000000000000002|\n|          john kerry|-5123806391895283158|1.0000000000000002|\n|          john thune|-5123806391895283158|1.0000000000000002|\n|        cilia flores|-2498084582014429470|1.0000000000000002|\n|arnold schwarzene...|-2209714333319565875|1.0000000000000002|\n|       nasser karimi|-5123806391895283158|1.0000000000000002|\n|         romero juca|-2498084582014429470|1.0000000000000002|\n|      gonzalo solano|-2209714333319565875|1.0000000000000002|\n|        josh earnest|-5123806391895283158|1.0000000000000002|\n|   christine lagarde|-5888010320500233275|1.0000000000000002|\n|       boris yeltsin|-5123806391895283158|1.0000000000000002|\n|        steve warren|-5123806391895283158|1.0000000000000002|\n|       steve mnuchin|-5123806391895283158|1.0000000000000002|\n|     muammar gaddafi| 1554551611396352462|1.0000000000000002|\n|           tom price|-5123806391895283158|1.0000000000000002|\n|        jeff horwitz|-5123806391895283158|1.0000000000000002|\n|       stephen innes|-5888010320500233275|1.0000000000000002|\n|     martin schaefer|-2209714333319565875|1.0000000000000002|\n|      saddam hussein|-2209714333319565875|1.0000000000000002|\n|          john kelly|-5123806391895283158|1.0000000000000002|\n|          jorge glas|-2209714333319565875|1.0000000000000002|\n|            kim jong|-5123806391895283158|1.0000000000000002|\n|     carla youngbear|-6817692648362739035|1.0000000000000002|\n|     godwin emefiele|-2209714333319565875|1.0000000000000002|\n|     ben van beurden|-9156255397278359948|1.0000000000000002|\n| jean-claude juncker|-2209714333319565875|1.0000000000000002|\n|         anand james|-5841166777524364385|1.0000000000000002|\n|       robert kaluza|-6351389831618156138|1.0000000000000002|\n| mahmoud ahmadinejad|-4678795136086809460|1.0000000000000002|\n|       jean chretien|-2209714333319565875|1.0000000000000002|\n|     delcy rodriguez|-2498084582014429470|1.0000000000000002|\n|      ian mccafferty|-2209714333319565875|1.0000000000000002|\n|   catherine mckenna|-2209714333319565875|1.0000000000000002|\n|          steven chu|-5123806391895283158|1.0000000000000002|\n|       raymond james|-8310023719465909789|1.0000000000000002|\n|    adams oshiomhole|-2209714333319565875|1.0000000000000002|\n|         najib razak|-2209714333319565875|1.0000000000000002|\n|      andrew torchia|-3222624696690863942|1.0000000000000002|\n|       ronald reagan|-5123806391895283158|1.0000000000000002|\n|        julie bishop|-2209714333319565875|1.0000000000000002|\n|       mark wahlberg|-8311584980666851264|1.0000000000000002|\n|       dmitry peskov|-5123806391895283158|1.0000000000000002|\n|  ali abdullah saleh|-7505950395755327245|1.0000000000000002|\n|    teresa schilling|-2209714333319565875|1.0000000000000002|\n|       rodong sinmun|-5123806391895283158|1.0000000000000002|\n|     hrvoje hranjski|-3401558106062925973|1.0000000000000002|\n|   mikhail gorbachev|-5123806391895283158|1.0000000000000002|\n|          wayne cole|-5888010320500233275|1.0000000000000002|\n|         adam schiff|-5123806391895283158|1.0000000000000002|\n|       john s mccain|-2446107919545999447|1.0000000000000002|\n|          steve coll|-5123806391895283158|1.0000000000000002|\n|      perfecto yasay|-3401558106062925973|1.0000000000000002|\n|     alexandra ulmer|-2498084582014429470|1.0000000000000002|\n|        luisa ortega|-2498084582014429470|1.0000000000000002|\n|   dmitry zhdannikov|-5123806391895283158|1.0000000000000002|\n|          jill stein|-6817692648362739035|1.0000000000000002|\n|        nawaz sharif|-5123806391895283158|1.0000000000000002|\n|     susana martinez|-1653125488376529568|1.0000000000000002|\n|        erica werner|-5123806391895283158|1.0000000000000002|\n|      cynthia viteri|-2209714333319565875|1.0000000000000002|\n|      dennis feltgen|-5123806391895283158|1.0000000000000002|\n|         amy goodman|-6817692648362739035|1.0000000000000002|\n|    william mckinley|-5123806391895283158|1.0000000000000002|\n|        pope francis|-2209714333319565875|1.0000000000000002|\n|        steven perry|-6817692648362739035|1.0000000000000002|\n|        john antczak|-2209714333319565875|1.0000000000000002|\n|         george bush|-5123806391895283158|1.0000000000000002|\n|        eraldo peres|-2498084582014429470|1.0000000000000002|\n|       david granger|-2498084582014429470|1.0000000000000002|\n| kenneth aaron smith|-2446107919545999447|1.0000000000000002|\n|      atlantic ocean|-7981629573227806010|1.0000000000000002|\n|        adam schreck|-5123806391895283158|1.0000000000000002|\n|         dale hudson|-5123806391895283158|1.0000000000000002|\n|   caroline stauffer|-2498084582014429470|1.0000000000000002|\n|        cory gardner|-5123806391895283158|1.0000000000000002|\n|        fidel castro|-5123806391895283158|1.0000000000000002|\n|  matthew trevithick|-4678795136086809460|1.0000000000000002|\n|     seth borenstein|-8778605200936573775|1.0000000000000002|\n|         scott brown|-8310023719465909789|1.0000000000000002|\n|   jennifer williams|-2209714333319565875|1.0000000000000002|\n| petroleos mexicanos|-2209714333319565875|1.0000000000000002|\n|         steny hoyer|-5123806391895283158|1.0000000000000002|\n|   olusegun obasanjo|-2209714333319565875|1.0000000000000002|\n|     hector timerman|  -98432351508960590|1.0000000000000002|\n|      isa al khalifa|-5123806391895283158|1.0000000000000002|\n|     angela charlton|-5123806391895283158|1.0000000000000002|\n|carel van bylandt...|-2019257571715061722|1.0000000000000002|\n|   john arthur smith|-1653125488376529568|1.0000000000000002|\n|   lawrence agcaoili| 1502858863154387400|1.0000000000000002|\n|            chi minh|-2325711285380119741|1.0000000000000002|\n|             al saud|-5123806391895283158|1.0000000000000002|\n|      george osborne|-2209714333319565875|1.0000000000000002|\n|       king abdullah|-5123806391895283158|1.0000000000000002|\n|            jack lew|-2209714333319565875|1.0000000000000002|\n|         sean murphy|-5123806391895283158|1.0000000000000002|\n|        celine aswad|-3222624696690863942|1.0000000000000002|\n|       newt gingrich|-5123806391895283158|1.0000000000000002|\n|         corina pons|-2498084582014429470|1.0000000000000002|\n|            al qaeda|-5123806391895283158|1.0000000000000002|\n|          shinzo abe|-5123806391895283158|1.0000000000000002|\n|       mike nowatzki|-6817692648362739035|1.0000000000000002|\n|       ashton carter|-5123806391895283158|1.0000000000000002|\n|     jesus torrealba|-2498084582014429470|1.0000000000000002|\n|cardinal pietro p...|-2209714333319565875|1.0000000000000002|\n|         kevin brady|-5123806391895283158|1.0000000000000002|\n|  cristina fernandez|-2498084582014429470|1.0000000000000002|\n|     madhusudan kela| 1371428353417041331|1.0000000000000002|\n|      ali al-sistani|-2209714333319565875|1.0000000000000002|\n|  abdullah al-thinni| 1554551611396352462|1.0000000000000002|\n|       david cameron|-2209714333319565875|1.0000000000000002|\n|       angela merkel|-2209714333319565875|1.0000000000000002|\n|   ruhollah khomeini|-4678795136086809460|1.0000000000000002|\n|      stephen miller|-5123806391895283158|1.0000000000000002|\n|   dwight eisenhower|-5123806391895283158|1.0000000000000002|\n|       boris johnson|-2209714333319565875|1.0000000000000002|\n|        rahul gandhi|-5470782197706017503|1.0000000000000002|\n|         pope franci|-2209714333319565875|1.0000000000000002|\n|     stanley fischer|-5888010320500233275|1.0000000000000002|\n|   elaine kurtenbach|-5123806391895283158|1.0000000000000002|\n|  dharmendra pradhan|-5123806391895283158|1.0000000000000002|\n|   bernadette meehan|-8026554220441592583|1.0000000000000002|\n|          fred upton|-5123806391895283158|1.0000000000000002|\n|        andrea ricci|-2126595006563519305|1.0000000000000002|\n|          brian jean|-2209714333319565875|1.0000000000000002|\n|          mike pence|-5123806391895283158|1.0000000000000002|\n| jeroen dijsselbloem|-2209714333319565875|1.0000000000000002|\n|       scott angelle| 1732022312676159896|1.0000000000000002|\n|        burj khalifa|-3222624696690863942|1.0000000000000002|\n|         orrin hatch|-5123806391895283158|1.0000000000000002|\n|        matthew daly|-5123806391895283158|1.0000000000000002|\n|   jean-marc ayrault|-2209714333319565875|1.0000000000000002|\n|       james bullard|-5888010320500233275|1.0000000000000002|\n|        daniel flynn|-2498084582014429470|1.0000000000000002|\n|   nicole ducheneaux|-6817692648362739035|1.0000000000000002|\n|      richard pullin|-5123806391895283158|1.0000000000000002|\n|     terry mcauliffe|-5123806391895283158|1.0000000000000002|\n|       geert wilders|-2209714333319565875|1.0000000000000002|\n|        barry morris|-2209714333319565875|1.0000000000000002|\n|        george soros|-5123806391895283158|1.0000000000000002|\n|   babatunde fashola|-2209714333319565875|1.0000000000000002|\n|       john williams|-5888010320500233275|1.0000000000000002|\n|         sarah palin|-5123806391895283158|1.0000000000000002|\n|         andy puzder|-5123806391895283158|1.0000000000000002|\n|         joe manchin|-5123806391895283158|1.0000000000000002|\n|  theodore roosevelt|-5123806391895283158|1.0000000000000002|\n|     sheikh mohammed|-3222624696690863942|1.0000000000000002|\n|         mike levine|-7981629573227806010|1.0000000000000002|\n|      atiku abubakar|-2209714333319565875|1.0000000000000002|\n|         jill colvin|-5123806391895283158|1.0000000000000002|\n|        gordon getty|-2209714333319565875|1.0000000000000002|\n|         jerry brown|-2209714333319565875|1.0000000000000002|\n|        thad cochran|-5123806391895283158|1.0000000000000002|\n|        arctic ocean|-7981629573227806010|1.0000000000000002|\n|         sean spicer|-5123806391895283158|1.0000000000000002|\n|     donald rumsfeld|-5123806391895283158|1.0000000000000002|\n|       howard archer|-2209714333319565875|1.0000000000000002|\n|         jack gerard|-5123806391895283158|1.0000000000000002|\n|   mohammed barkindo|-5123806391895283158|1.0000000000000002|\n|       jorge arreaza|-2498084582014429470|1.0000000000000002|\n|       brian mcnoldy|-5123806391895283158|1.0000000000000002|\n|        kelcy warren|-6817692648362739035|1.0000000000000002|\n|        bill clinton|-5123806391895283158|1.0000000000000002|\n|nosratollah khosr...|-4678795136086809460|1.0000000000000002|\n|         simon henry|-9156255397278359948|1.0000000000000002|\n|        marcus bawol|-5285211027918953228|1.0000000000000002|\n|       pacific ocean|-2209714333319565875|1.0000000000000002|\n|        alan henning|-2209714333319565875|1.0000000000000002|\n|      eric rosengren|-5888010320500233275|1.0000000000000002|\n|     rodrigo duterte|-3401558106062925973|1.0000000000000002|\n|     zayed al nahyan|-3222624696690863942|1.0000000000000002|\n|         paul cramer|-5123806391895283158|1.0000000000000002|\n|      alberto nisman|  -98432351508960590|1.0000000000000002|\n|       sergey lavrov|-5123806391895283158|1.0000000000000002|\n|      hassan rouhani|-4678795136086809460|1.0000000000000002|\n|       stefan lofven|-2209714333319565875|1.0000000000000002|\n|        michel temer|-2498084582014429470|1.0000000000000002|\n|        matt dilallo|-1420375460633051046|1.0000000000000002|\n|  nicos anastasiades| 3045206282787798650|1.0000000000000002|\n|         elaine chao|-5123806391895283158|1.0000000000000002|\n|     moammar gadhafi|-5123806391895283158|1.0000000000000002|\n|   luisa ortega diaz|-2498084582014429470|1.0000000000000002|\n|     wayne stenehjem|-6817692648362739035|1.0000000000000002|\n|       bukola saraki|-2209714333319565875|1.0000000000000002|\n|       aliko dangote|-2209714333319565875|1.0000000000000002|\n|       rick santorum|-2376203089953264870|1.0000000000000002|\n|         dick durbin|-5123806391895283158|1.0000000000000002|\n|        amir hekmati|-4678795136086809460|1.0000000000000002|\n|      mauricio macri|-2498084582014429470|1.0000000000000002|\n|         phil greene|-7981629573227806010|1.0000000000000002|\n|         darby allen|-2209714333319565875|1.0000000000000002|\n|     nouri al-maliki|-2209714333319565875|1.0000000000000002|\n|     nicola sturgeon|-2209714333319565875|1.0000000000000002|\n|      joseph radford|-5123806391895283158|1.0000000000000002|\n|          joe oliver|-2209714333319565875|1.0000000000000002|\n|         john horgan|-2209714333319565875|1.0000000000000002|\n|         tamas varga|-5123806391895283158|1.0000000000000002|\n|         doug burgum|-6817692648362739035|1.0000000000000002|\n|     khalid al-falih|-5123806391895283158|1.0000000000000002|\n|         nyesom wike|-2209714333319565875|1.0000000000000002|\n|       kamala harris|-2209714333319565875|1.0000000000000002|\n|   mount angel abbey|-2209714333319565875|1.0000000000000002|\n|       vivian salama|-5123806391895283158|1.0000000000000002|\n|        nancy pelosi|-5123806391895283158|1.0000000000000002|\n|    espen barth eide| 3045206282787798650|1.0000000000000002|\n|      donald vidrine|-6351389831618156138|1.0000000000000002|\n|     pavel molchanov|-8310023719465909789|1.0000000000000002|\n|        brian fallon|-5123806391895283158|1.0000000000000002|\n|       baltic states|-5123806391895283158|1.0000000000000002|\n|        girish gupta|-2498084582014429470|1.0000000000000002|\n|           tim nolan|-7981629573227806010|1.0000000000000002|\n|      william dudley|-5888010320500233275|1.0000000000000002|\n|      kathleen wynne|-2209714333319565875|1.0000000000000002|\n| ngozi okonjo-iweala|-2209714333319565875|1.0000000000000002|\n|     peter prengaman|-2498084582014429470|1.0000000000000002|\n|      khalifa haftar| 1554551611396352462|1.0000000000000002|\n|      donnell hushka|-6817692648362739035|1.0000000000000002|\n|      joshua goodman|-2209714333319565875|1.0000000000000002|\n|      lilian tintori|-2498084582014429470|1.0000000000000002|\n|          mark fedor|-7981629573227806010|1.0000000000000002|\n|      anthony boadle|-2498084582014429470|1.0000000000000002|\n|        andrzej duda|-2209714333319565875|1.0000000000000002|\n|          john kirby|-5123806391895283158|1.0000000000000002|\n|       burley rupert|-2540231989603794937|1.0000000000000002|\n|         hugo chavez|-2498084582014429470|1.0000000000000002|\n|      alexei navalny|-5123806391895283158|1.0000000000000002|\n|            our lady|-2209714333319565875|1.0000000000000002|\n|diezani alison-ma...|-2209714333319565875|1.0000000000000002|\n|         juha sipila|-2209714333319565875|1.0000000000000002|\n|      edward snowden|-5123806391895283158|1.0000000000000002|\n|   chuck mikolajczak|-5888010320500233275|1.0000000000000002|\n|      fernando llano|-2498084582014429470|1.0000000000000002|\n|        femi adesina|-2209714333319565875|1.0000000000000002|\n|       mark luschini| 2056194467090207696|1.0000000000000002|\n|        chris weston|-5123806391895283158|1.0000000000000002|\n|          ken thomas|-5123806391895283158|1.0000000000000002|\n|        john brennan|-5123806391895283158|1.0000000000000002|\n|           donald jr|-5123806391895283158|1.0000000000000002|\n|        john podesta|-5123806391895283158|1.0000000000000002|\n|       yakubu dogara|-2209714333319565875|1.0000000000000002|\n|          umm sayyaf|-8026554220441592583|1.0000000000000002|\n|        shane oliver|-5888010320500233275|1.0000000000000002|\n|   meredith matthews|-2209714333319565875|1.0000000000000002|\n|       mohamed morsi|-2209714333319565875|1.0000000000000002|\n|        peter kassig|-2209714333319565875|1.0000000000000002|\n|        viktor orban|-5123806391895283158|1.0000000000000002|\n|         james foley|-2209714333319565875|1.0000000000000002|\n|        mario draghi|-5888010320500233275|1.0000000000000002|\n|     francois fillon|-2209714333319565875|1.0000000000000002|\n|           las vegas|-5123806391895283158|1.0000000000000002|\n|  abed rabbo mansour|-7505950395755327245|1.0000000000000002|\n|  arabia king salman|-5123806391895283158|1.0000000000000002|\n|     richard lardner|-5123806391895283158|1.0000000000000002|\n|jose luis rodrigu...|-2498084582014429470|1.0000000000000002|\n|          jae c hong|-2209714333319565875|1.0000000000000002|\n|     teddy roosevelt|-5123806391895283158|1.0000000000000002|\n|        ali al-naimi|-5123806391895283158|1.0000000000000002|\n|          pena nieto|-2209714333319565875|1.0000000000000002|\n|         tom vilsack|-5123806391895283158|1.0000000000000002|\n|     t boone pickens|-5123806391895283158|1.0000000000000002|\n|        kevin cramer|-6817692648362739035|1.0000000000000002|\n|    malcolm turnbull|-2209714333319565875|1.0000000000000002|\n|      sigmar gabriel|-2209714333319565875|1.0000000000000002|\n|          evan lucas|-5888010320500233275|1.0000000000000002|\n| vladimir isachenkov|-5123806391895283158|1.0000000000000002|\n|          evan vucci|-5123806391895283158|1.0000000000000002|\n|      mohammed morsi|-2209714333319565875|1.0000000000000002|\n|          john lewis|-5123806391895283158|1.0000000000000002|\n|        rodrigo maia|-2498084582014429470|1.0000000000000002|\n|         van beurden|-9156255397278359948|1.0000000000000002|\n|      karolin schaps|-5123806391895283158|1.0000000000000002|\n|         abdul samah| 6373727152685515717|1.0000000000000002|\n|        betty dobdon| 8132684862963203237|1.0000000000000002|\n|        james mattis|-5123806391895283158|1.0000000000000002|\n|         frank bajak|-8778605200936573775|1.0000000000000002|\n|       susan collins|-5123806391895283158|1.0000000000000002|\n|     whitney morreau| 8132684862963203237|1.0000000000000002|\n|     petromatrix gmb|-6152157406336332429|1.0000000000000002|\n|      yoshihide suga|-5123806391895283158|1.0000000000000002|\n|       lamido sanusi|-2209714333319565875|1.0000000000000002|\n|       charles evans|-5888010320500233275|1.0000000000000002|\n|         nikki haley|-5123806391895283158|1.0000000000000002|\n|       marvin nelson|-6817692648362739035|1.0000000000000002|\n|    james macpherson|-6817692648362739035|1.0000000000000002|\n|          rick perry|-5123806391895283158|1.0000000000000002|\n|vladimir padrino ...|-2498084582014429470|1.0000000000000002|\n|   abdulaziz al saud|-5123806391895283158|1.0000000000000002|\n|        ben bernanke|-5888010320500233275|1.0000000000000002|\n|         dhruv desai|-5841166777524364385|1.0000000000000002|\n|pablo martinez mo...|-5123806391895283158|1.0000000000000002|\n|          peter cook|-5123806391895283158|1.0000000000000002|\n|        scott walker|-2376203089953264870|1.0000000000000002|\n|    marcel thieliant|-5123806391895283158|1.0000000000000002|\n|         payu harris|-6817692648362739035|1.0000000000000002|\n|      robert mueller|-5123806391895283158|1.0000000000000002|\n|            joe ceci|-2209714333319565875|1.0000000000000002|\n|      rick mcmichael|-2209714333319565875|1.0000000000000002|\n|       mike huckabee|-2376203089953264870|1.0000000000000002|\n|        stoxx europe|-5888010320500233275|1.0000000000000002|\n|    armathwaite hall|-5123806391895283158|1.0000000000000002|\n|   leonardo dicaprio|-5123806391895283158|1.0000000000000002|\n|         javad zarif|-4678795136086809460|1.0000000000000002|\n|  jose antonio meade|-2209714333319565875|1.0000000000000002|\n|     joesley batista|-2498084582014429470|1.0000000000000002|\n|     mitch mcconnell|-5123806391895283158|1.0000000000000002|\n|          bob dudley|-9156255397278359948|1.0000000000000002|\n|      sebastian kurz|-5123806391895283158|1.0000000000000002|\n|     john richardson|-2446107919545999447|1.0000000000000002|\n|           matt mead|-6817692648362739035|1.0000000000000002|\n|     haider al-abadi|-2209714333319565875|1.0000000000000002|\n|             al gore|-5123806391895283158|1.0000000000000002|\n|       rachel notley|-2209714333319565875|1.0000000000000002|\n|      martin omalley|-5123806391895283158|1.0000000000000002|\n|       siamak namazi|-4678795136086809460|1.0000000000000002|\n|   valerie volcovici|-5123806391895283158|1.0000000000000002|\n|     abraham lincoln|-5123806391895283158|1.0000000000000002|\n|           alan fram|-5123806391895283158|1.0000000000000002|\n|       mike williams|-8311584980666851264|1.0000000000000002|\n|debbie wasserman ...|-5123806391895283158|1.0000000000000002|\n|    jenny barchfield|-2498084582014429470|1.0000000000000002|\n|john d rockefelle...| 3434937228167692261|1.0000000000000002|\n|        greg mckenna|-5123806391895283158|1.0000000000000002|\n|       carly fiorina|-2376203089953264870|1.0000000000000002|\n|           liu jieyi|-5123806391895283158|1.0000000000000002|\n|          bosco wong| 5602245785061237038|1.0000000000000002|\n|        manuel valls|-2209714333319565875|1.0000000000000002|\n|      michael hewson|-5123806391895283158|1.0000000000000002|\n|        lai mohammed|-2209714333319565875|1.0000000000000002|\n|nikolas lashbrook...| 8132684862963203237|1.0000000000000002|\n|abu bakr al-baghdadi|-8026554220441592583|1.0000000000000002|\n|            ted cruz|-2376203089953264870|1.0000000000000002|\n|         tom gardner|-1420375460633051046|1.0000000000000002|\n|     lolita c baldor|-5123806391895283158|1.0000000000000002|\n|          roger kwok| 5602245785061237038|1.0000000000000002|\n|      brian sandoval|-5123806391895283158|1.0000000000000002|\n|      bangko sentral| 1502858863154387400|1.0000000000000002|\n|       richard nixon|-5123806391895283158|1.0000000000000002|\n|       matthew brown|-2209714333319565875|1.0000000000000002|\n|       yemi osinbajo|-2209714333319565875|1.0000000000000002|\n|      vladimir putin|-5123806391895283158|1.0000000000000002|\n|         addis ababa|-6664691230212547061|1.0000000000000002|\n|       rex tillerson|-5123806391895283158|1.0000000000000002|\n|     fernando collor|-2498084582014429470|1.0000000000000002|\n|        sunni muslim|-5123806391895283158|1.0000000000000002|\n|        deir el-zour|-5123806391895283158|1.0000000000000002|\n|       melania trump|-5123806391895283158|1.0000000000000002|\n|            jim webb|-5123806391895283158|1.0000000000000002|\n|         donald tusk|-2209714333319565875|1.0000000000000002|\n|        ulf laessing|-2209714333319565875|1.0000000000000002|\n|         sani abacha|-2209714333319565875|1.0000000000000002|\n|    mahathir mohamad|-2209714333319565875|1.0000000000000002|\n|   ayman al-warfalli|-2209714333319565875|1.0000000000000002|\n|      lindsey graham|-2376203089953264870|1.0000000000000002|\n|        david vitter| 1732022312676159896|1.0000000000000002|\n|     steffen seibert|-2209714333319565875|1.0000000000000002|\n|         john hoeven|-6817692648362739035|1.0000000000000002|\n|       bert koenders|-2209714333319565875|1.0000000000000002|\n|        robert burns|-5123806391895283158|1.0000000000000002|\n|     fabiola sanchez|-2498084582014429470|1.0000000000000002|\n|      serzh sargsyan|-3125135966719759319|1.0000000000000002|\n|         lee raymond|-5123806391895283158|1.0000000000000002|\n| robert f kennedy jr|-6817692648362739035|1.0000000000000002|\n|  nataliya vasilyeva|-5123806391895283158|1.0000000000000002|\n|     ahmet davutoglu|-5123806391895283158|1.0000000000000002|\n+--------------------+--------------------+------------------+\n\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508002268257_1579825212",
+      "id": "20171014-173108_1072815128",
+      "dateCreated": "2017-10-14T17:31:08+0000",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7276",
+      "text": "def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {\nval p = new java.io.PrintWriter(f)\ntry { op(p) } finally { p.close() }\n}\n\nprintToFile(new java.io.File(\"/tmp/edges.csv\")) { p =>\nprGraph.edges.map(e => {\n  Array(e.srcId, e.dstId, e.attr).mkString(\",\")\n}).collect().foreach(p.println)\n}\n\nprintToFile(new java.io.File(\"/tmp/nodes.csv\")) { p =>\nprGraph.vertices.map(e => {\n  Array(e._1, e._2._1, e._2._2, e._2._3).mkString(\",\")\n}).collect().foreach(p.println)\n}",
+      "dateUpdated": "2017-10-14T17:56:30+0000",
+      "dateFinished": "2017-10-14T17:56:35+0000",
+      "dateStarted": "2017-10-14T17:56:30+0000",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\nprintToFile: (f: java.io.File)(op: java.io.PrintWriter => Unit)Unit\n"
+          }
+        ]
+      }
+    },
+    {
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1508003443967_-1834282533",
+      "id": "20171014-175043_1254179786",
+      "dateCreated": "2017-10-14T17:50:43+0000",
+      "status": "READY",
+      "progressUpdateIntervalMs": 500,
+      "focus": true,
+      "$$hashKey": "object:7501"
+    }
+  ],
+  "name": "Gdelt-influencers",
+  "id": "2CUMXP7WB",
+  "angularObjects": {
+    "2BRWU4WXC:shared_process": [],
+    "2AM1YV5CU:shared_process": [],
+    "2AJXGMUUJ:shared_process": [],
+    "2ANGGHHMQ:shared_process": [],
+    "2AKK3QQXU:shared_process": []
+  },
+  "config": {
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}
