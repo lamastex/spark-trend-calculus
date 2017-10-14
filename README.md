@@ -112,7 +112,7 @@ Here are few examples of different communities (better resolution [here](/image
 
 #### Communities
 
-Not a surprise, Donald Trump is in our graph, and is center of the most important community (top 20 displayed below)
+Not a surprise, Donald Trump is in our graph, and is center of the most important community (random first 20 displayed below)
 
 ```
 +-----------------+
