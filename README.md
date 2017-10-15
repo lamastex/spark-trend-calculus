@@ -38,7 +38,7 @@ Below example shows the (normalized) media coverage for both France and United K
 
 That way, I can quickly eye ball any potential outbreak related to the oil and gas markets. 
 Programmatically, I define the coverage as the zscore function of the number of articles per country. 
-I should define a threshold after which I define a news event as a major outbreak, but for now, let's just get 
+I should define a threshold after which a random event is considered a major outbreak, but for now, let's just get 
 the top 1000 tuples country / dates (i.e. the 1000 top most massively covered events). 
 
 The idea is then to enrich the full data with the actual events that took place on those dates, at these places. 
