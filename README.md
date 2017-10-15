@@ -26,9 +26,9 @@ political events in the oil market?*
 My approach will consist on the following
 
 - Extract all event Ids from GKG that relate to oil or gas (resp. `ENV_OIL` and `ENV_GAS` cameo code)
-- Retrieve all events from EVENT related to the above by joining 2 datasets (massive `JOIN` operation)
-- Extract the media coverage as a normalized number of articles by country
-- Plot both the goldstein scale and number of articles over time grouped by country
+- Retrieve all events from EVENT related to the above by joining 2 sets through the `eventId` (massive `JOIN` operation)
+- Extract the media coverage
+- Plot both the goldstein scale and coverage over time grouped by country
 
 ### Media coverage
 
@@ -37,10 +37,11 @@ Below example shows the (normalized) media coverage for both France and United K
 ![EVENT](/images/FR_UK_OIL-events.png)
 
 That way, I can quickly eye ball any potential outbreak related to the oil and gas markets. 
-Programmatically, I define the coverage as the zscore function of the number of articles per country, and extract 
-top 1000 tuples country / dates (1000 most massively covered events). 
+Programmatically, I define the coverage as the zscore function of the number of articles per country. 
+I should define a threshold after which I define a news event as a major outbreak, but for now, let's just get 
+the top 1000 tuples country / dates (i.e. the 1000 top most massively covered events). 
 
-The idea is then to enrich the full data with the events that took place on those dates, at these places. 
+The idea is then to enrich the full data with the actual events that took place on those dates, at these places. 
 
 ```
 +-----------+-------+------------------+
@@ -70,9 +71,9 @@ The idea is then to enrich the full data with the events that took place on thos
 ```
 
 - I extracted only the top 1,000 (in order to limit the number of articles to fetch in a 4h time competition)
-- I can safely fetch all articles from online websites using the URLs provided in data model. 
+- I can safely fetch all articles from online websites using the URLs provided in Gdelt data model. 
 - The list of URLs I get back is around 30K large. On my 10 nodes cluster, I reckon it should take around 30mn to scrape all of those. 
-- I only fetch the first third and build an efficient web scraper that I distribute across my 10 nodes.
+- I only fetch the first third and build an efficient web scraper that I distribute across my 10 nodes (took 15mn overall)
 
 ### Fetching HTML content
 
@@ -103,7 +104,8 @@ Those are the news events that happened on those dates, at those places,
 and that were identified as breaking news articles with regards to either `ENV_OIL` or `ENV_GAS`. 
 I reckon I should de-noise this data by looking at the text content, applying some NLP and topic modeling perhaps, 
 but the second top most article is of a great value already as clearly, piracy off the Ivory coast should have 
-strong impact in the oil and gas markets. 
+strong impact in the oil and gas markets. Let's rely on the taxonomy provided by Gdelt and assume all of those were actual
+oil and gas events.
 
 ![PIRACY](/images/piracy.jpg)
 
