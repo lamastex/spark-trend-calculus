@@ -154,8 +154,11 @@ This can be achieved by first collecting the degrees of each node and then remov
   })
 ```
 
-This now reduces my dimensions down to ~18,000 vertices, 330,000 edges and an average of 11 connections per node. 
-Also, in addition of the community, I execute a simple PageRank as a direct measure of the "influencer" score. 
+This now reduces my dimensions down to ~18,000 vertices, 330,000 edges and an 
+average of 11 connections per node. Executing WCC brings back 54 communities that 
+can be investigated further.
+Also, in addition of the community, I execute a simple PageRank as a direct
+ measure of the "influencer" score. 
 
 #### Extracting communities
 
