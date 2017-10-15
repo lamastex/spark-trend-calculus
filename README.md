@@ -252,7 +252,7 @@ I use the brent index provided by [QUANDL](https://www.quandl.com/collections/ma
 
 ![BRENT1](/images/brent.png)
 
-The technique I am using to detect trends was invented from a friend of mine -  [TrendCalculus](https://bitbucket.org/bytesumo/trendcalculus-public). 
+The technique I am using to detect trends was invented from a friend of mine, Andrew Morgan -  [TrendCalculus](https://bitbucket.org/bytesumo/trendcalculus-public). 
 
 The concept is to find all the highs and lows in my timeseries data, 
 finding the highest high and lowest low occurring in each moving window. I use a window of a 30 days, expecting to find 36 highs and lows  
