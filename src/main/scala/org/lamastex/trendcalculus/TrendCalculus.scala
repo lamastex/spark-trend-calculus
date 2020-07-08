@@ -12,9 +12,9 @@
  * limitations under the License.
  */
 
-package com.aamend.trendcalculus
+package org.lamastex.trendcalculus
 
-import com.aamend.trendcalculus.DateUtils.Frequency
+import org.lamastex.trendcalculus.DateUtils.Frequency
 
 import scala.util.Try
 
