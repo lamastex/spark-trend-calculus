@@ -4,10 +4,58 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.aamend.trendcalculus</groupId>
+    <groupId>org.lamastex.trendcalculus</groupId>
     <artifactId>TrendCalculus-2020</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
+  <url>https://github.com/lamastex/spark-trend-calculus</url>
+  <description>Trend Calculus in Spark</description>
+  <inceptionYear>2017</inceptionYear>
+  <developers>
+    <developer>
+      <id>aamend</id>
+      <name>Antoine Amend</name>
+      <email>antoine.amend@gmail.com</email>
+      <organization>aamend.com</organization>
+      <timezone>0</timezone>
+      <roles>
+        <role>big data scientist</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>lamastex</id>
+      <name>Raazesh Sainudiin</name>
+      <email>raazesh.sainudiin@gmail.com</email>
+      <organization>lamastex.org</organization>
+      <timezone>0</timezone>
+      <roles>
+        <role>Associate Professor of Mathematics with Specialisation in Data Science and Senior Researcher in Data Science</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>JohannesGraner</id>
+      <name>Johannes Graner</name>
+      <email>johannes.graner@hotmail.com</email>
+      <organization>Combient Competence Centre for Data Engineering Sciences, Department of Mathematics, Uppsala University</organization>
+      <timezone>0</timezone>
+      <roles>
+        <role>Summer Internship in Data Science</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>AlbertNilsson</id>
+      <name>Albert Nilsson</name>
+      <email>albertnilsson1998@gmail.com</email>
+      <organization>Combient Competence Centre for Data Engineering Sciences, Department of Mathematics, Uppsala University</organization>
+      <timezone>0</timezone>
+      <roles>
+        <role>Summer Internship in Data Science</role>
+      </roles>
+    </developer>
+  </developers>
+  <organization>
+    <name>lamastex.org</name>
+  </organization>
 
     <licenses>
         <license>
@@ -18,18 +66,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scala.version>2.11.8</scala.version>
+        <scala.version>2.11.12</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <spark.version>2.4.4</spark.version>
         <java.version>1.8</java.version>
     </properties>
 
     <dependencies>
-        <!-- <dependency>
-            <groupId>com.gravity</groupId>
-            <artifactId>goose_2.11</artifactId>
-            <version>2.1.30</version>
-        </dependency> -->
+        <!--SCALA DEPENDENCIES (provided)-->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
@@ -42,15 +86,10 @@
             <version>${scala.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!--SPARK DEPENDENCIES (provided)-->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.binary.version}</artifactId>
-            <version>${spark.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-graphx_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -60,31 +99,7 @@
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-core_2.11</artifactId>
-            <version>7.2.5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bizo</groupId>
-            <artifactId>mighty-csv_2.11</artifactId>
-            <version>0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>1.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>2.9.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.binary.version}</artifactId>
-            <version>3.7.1</version>
-        </dependency>
+        <!--TEST DEPENDENCIES (test)-->
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.binary.version}</artifactId>
@@ -147,7 +162,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
+                <version>3.2.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

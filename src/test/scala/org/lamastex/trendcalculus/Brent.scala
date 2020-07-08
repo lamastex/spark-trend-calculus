@@ -1,4 +1,4 @@
-package com.aamend.trendcalculus
+package org.lamastex.trendcalculus
 
 import org.scalatest.Matchers
 
@@ -13,9 +13,9 @@ class BrentTest extends SparkSpec with Matchers {
     import org.apache.spark.sql.functions._
     import spark.implicits._
 
-    import com.aamend.trendcalculus.DateUtils.Frequency
-    import com.aamend.trendcalculus.SeriesUtils.FillingStrategy
-    import com.aamend.trendcalculus._
+    import org.lamastex.trendcalculus.DateUtils.Frequency
+    import org.lamastex.trendcalculus.SeriesUtils.FillingStrategy
+    import org.lamastex.trendcalculus._
 
 /*     val spark = SparkSession.builder().appName("gdelt-harness").getOrCreate()
     val sqlContext = spark.sqlContext */
@@ -24,13 +24,13 @@ class BrentTest extends SparkSpec with Matchers {
     val valueUDF = udf((s: String) => s.toDouble)
 
     // Only keep brent with data we know could match ours
-    val filePathRoot: String = "file:///root/GIT/lamastex/spark-trend-calculus/src/test/resources/com/aamend/trendcalculus/"
+    val filePathRoot: String = "file:///root/GIT/lamastex/spark-trend-calculus/src/test/resources/org/lamastex/trendcalculus/"
     val DF = spark.read.option("header", "true").option("inferSchema", "true").csv(filePathRoot+"brent.csv").filter(year(col("DATE")) >= 2015)
     // val DF = Source.fromInputStream(this.getClass.getResourceAsStream("brent.csv"), "UTF-8").filter(year(col("DATE")) >= 2015)
     DF.show
     DF.createOrReplaceTempView("brent")
 
-    println(DF.count)
+    assert(DF.count == 532)
 
     val trendDF = DF.rdd.map(r => ("DUMMY", Point(r.getAs[java.sql.Date]("DATE").getTime, r.getAs[Double]("VALUE")))).groupByKey().mapValues(it => {
       val series = it.toArray.sortBy(_.x)
@@ -48,7 +48,7 @@ class BrentTest extends SparkSpec with Matchers {
     }).toDF("trend", "x", "y")
 
     trendDF.show
-    println(trendDF.count)
+    assert(trendDF.count == 11)
 
       /*
     +-----+--------------------+-----+
@@ -71,7 +71,7 @@ class BrentTest extends SparkSpec with Matchers {
     val trendUDF = udf((t: String) => if (t == null) "NEUTRAL" else t)
     val result = trendDF.join(DF, trendDF("x") === DF("DATE"), "right_outer").withColumn("TREND", trendUDF(col("trend"))).select("DATE", "VALUE", "TREND") //.createOrReplaceTempView("trends")
     result.show
-    println(result.count)
+    assert(result.count == 532)
     
   }
 }
