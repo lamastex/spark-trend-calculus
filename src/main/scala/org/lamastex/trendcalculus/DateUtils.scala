@@ -1,4 +1,4 @@
-package com.aamend.trendcalculus
+package org.lamastex.trendcalculus
 
 import org.joda.time.{DateTime, DateTimeConstants}
 
