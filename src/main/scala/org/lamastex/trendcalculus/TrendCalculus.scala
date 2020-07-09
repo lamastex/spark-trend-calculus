@@ -115,88 +115,86 @@ class TrendCalculus(timeseries: Array[Point], groupingFrequency: Frequency.Value
 
   private def reversalTrend(windows: List[FHLS], processed: List[FHLS]): List[FHLS] = {
 
-    if (windows.isEmpty)
-      return processed
+    def foldFunc(processedWindows: List[FHLS], windowHead: FHLS): List[FHLS] = {
+      // Retrieve last processed
+      val previousFHLS = processedWindows.last
 
-    // Retrieve last processed
-    val previousFHLS = processed.last
-    val currentFHLS = windows.head
-    val remainingFHLS = windows.tail
+      val currentFHLS = windowHead
 
-    val sign = getSign(currentFHLS, previousFHLS)
-    if (sign != 0) {
+      val sign = getSign(currentFHLS, previousFHLS)
+      if (sign != 0) {
+        val currentFHLSUpdated = FHLS(
+          currentFHLS.left,
+          currentFHLS.right,
+          currentFHLS.high,
+          currentFHLS.low,
+          currentFHLS.leftSeries,
+          currentFHLS.rightSeries,
+          sign
+        )
+
+        return processedWindows :+ currentFHLSUpdated
+      }
+
+      // Shrink its rightSeries
+      val previousFHLSUpdated = FHLS(
+        previousFHLS.left,
+        previousFHLS.right,
+        previousFHLS.high,
+        previousFHLS.low,
+        previousFHLS.leftSeries,
+        Array(),
+        previousFHLS.sign
+      )
+
+      // Build an intermediate series
+      val wSeries = previousFHLS.rightSeries ++ currentFHLS.leftSeries
+      val left = previousFHLS.right
+      val right = currentFHLS.left
+      val List(low, high) = List(left, right).sorted(Ordering.by((p: Point) => p.y))
+      val leftSeries = wSeries.filter(_.x < left.x)
+      val rightSeries = wSeries.filter(_.x > right.x)
+      val intermediateSign = getSign(high, low, previousFHLS)
+
+      // Compute the intermediate FHLS
+      val intermediateFHLS = FHLS(
+        left,
+        right,
+        high,
+        low,
+        leftSeries,
+        rightSeries,
+        intermediateSign
+      )
+
+      // Modify sign of current list and shrink its left series
+      val currentSign = getSign(currentFHLS, intermediateFHLS)
       val currentFHLSUpdated = FHLS(
         currentFHLS.left,
         currentFHLS.right,
         currentFHLS.high,
         currentFHLS.low,
-        currentFHLS.leftSeries,
+        Array(),
         currentFHLS.rightSeries,
-        sign
+        currentSign
       )
 
-      return reversalTrend(
-        remainingFHLS,
-        processed :+ currentFHLSUpdated
-      )
+      // Remove last window
+      // Insert modified last window
+      // Insert intermediate window
+      // Insert modified window
+
+        processedWindows.dropRight(1) :+
+          previousFHLSUpdated :+
+          intermediateFHLS :+
+          currentFHLSUpdated
     }
 
-    // Shrink its rightSeries
-    val previousFHLSUpdated = FHLS(
-      previousFHLS.left,
-      previousFHLS.right,
-      previousFHLS.high,
-      previousFHLS.low,
-      previousFHLS.leftSeries,
-      Array(),
-      previousFHLS.sign
-    )
-
-    // Build an intermediate series
-    val wSeries = previousFHLS.rightSeries ++ currentFHLS.leftSeries
-    val left = previousFHLS.right
-    val right = currentFHLS.left
-    val List(low, high) = List(left, right).sorted(Ordering.by((p: Point) => p.y))
-    val leftSeries = wSeries.filter(_.x < left.x)
-    val rightSeries = wSeries.filter(_.x > right.x)
-    val intermediateSign = getSign(high, low, previousFHLS)
-
-    // Compute the intermediate FHLS
-    val intermediateFHLS = FHLS(
-      left,
-      right,
-      high,
-      low,
-      leftSeries,
-      rightSeries,
-      intermediateSign
-    )
-
-    // Modify sign of current list and shrink its left series
-    val currentSign = getSign(currentFHLS, intermediateFHLS)
-    val currentFHLSUpdated = FHLS(
-      currentFHLS.left,
-      currentFHLS.right,
-      currentFHLS.high,
-      currentFHLS.low,
-      Array(),
-      currentFHLS.rightSeries,
-      currentSign
-    )
-
-    // Remove last window
-    // Insert modified last window
-    // Insert intermediate window
-    // Insert modified window
-
-    reversalTrend(
-      remainingFHLS,
-      processed.dropRight(1) :+
-        previousFHLSUpdated :+
-        intermediateFHLS :+
-        currentFHLSUpdated
-    )
-
+    if (processed.isEmpty) {
+      windows.tail.foldLeft(List(windows.head))(foldFunc)
+    } else {
+      windows.foldLeft(processed)(foldFunc)
+    }
   }
 
   private def window(time: Long, frequency: Frequency.Value) = {
