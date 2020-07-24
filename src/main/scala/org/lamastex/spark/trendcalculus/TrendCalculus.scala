@@ -94,7 +94,7 @@ class TrendCalculus(timeseries: Array[Point], groupingFrequency: Frequency.Value
           .sortBy(_._1)
 
         val high = sortedWSeries.last._2.head //earliest high price
-      val low = sortedWSeries.head._2.last //latest low price
+        val low = sortedWSeries.head._2.last //latest low price
 
         val List(left, right) = List(high, low).sorted(Ordering.by((p: Point) => p.x))
         val leftSeries = wSeries.filter(_.x < left.x)
