@@ -30,7 +30,7 @@ The scala function is `parseFX` and has as input a string formatted as
 
 where DateTime Stamp is formatted as `yyyyMMdd HHmmSS`. Open, High, Low and Close are floating point numbers and Volume is an integer (which seems to always be 0).
 
-
+To read an FX-1-Minute csv directly to an apache spark Dataset, one can use `spark.read.fx1m(filePath)`.
 
 ### Yahoo! Finance parser
 
@@ -41,3 +41,5 @@ The scala function is `parseYF` and has as input a string formatted as
 ```
 
 where DateTime Stamp is formatted either as `yyyy-MM-dd` or beginning with `yyyy-MM-dd HH:mm:SS` (i.e. `2020-07-09 18:05:00+02:00` is valid but `UTC+2 2020-07-09 18:05:00` is not). Open, High, Low, Close and Adj Close are floating point numbers and Volume can be either an integer or a floating point number.
+
+To read a yfinance csv directly to an apache spark Dataset, one can use `spark.read.yfin(filePath)`.
