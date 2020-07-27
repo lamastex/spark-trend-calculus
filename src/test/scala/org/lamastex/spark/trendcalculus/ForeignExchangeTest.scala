@@ -1,4 +1,4 @@
-package org.lamastex.trendcalculus
+package org.lamastex.spark.trendcalculus
 
 import org.scalatest.Matchers
 
@@ -9,29 +9,29 @@ class ForeignExchangeTest extends SparkSpec with Matchers {
     // Test that Foreign Exchange parser works as expected
     sparkTest("Foreign Exchange parser") { spark => 
         import spark.implicits._
-        val fxDS = Source.fromInputStream(this.getClass.getResourceAsStream("DAT_ASCII_BCOUSD_M1_2016.csv"), "UTF-8").getLines().toSeq.toDS().map(FinanceParsers.parseFX)
+        val fxDS = Source.fromInputStream(this.getClass.getResourceAsStream("fx_test.csv"), "UTF-8").getLines().toSeq.toDS().map(Parsers.parseFX)
         fxDS.show
-        assert(fxDS.count == 296922)
+        assert(fxDS.count == 100)
     }
 
     // Test that we can do Trend Calculus using the Foreign Exchange parser
     sparkTest("Foreign Exchange Trend Calculus") { spark =>
         import spark.implicits._
 
-        import org.lamastex.trendcalculus.DateUtils.Frequency
-        import org.lamastex.trendcalculus.SeriesUtils.FillingStrategy
-        import org.lamastex.trendcalculus._
+        import org.lamastex.spark.trendcalculus.DateUtils.Frequency
+        import org.lamastex.spark.trendcalculus.SeriesUtils.FillingStrategy
+        import org.lamastex.spark.trendcalculus._
 
         val fxDF = Source
             .fromInputStream(
                 this
                 .getClass
-                .getResourceAsStream("DAT_ASCII_BCOUSD_M1_2016.csv"), "UTF-8"
+                .getResourceAsStream("fx_test.csv"), "UTF-8"
             )
             .getLines()
             .toSeq
             .toDS()
-            .map(FinanceParsers.parseFX)
+            .map(Parsers.parseFX)
             .toDF
             .select("time","open")
 
@@ -53,7 +53,7 @@ class ForeignExchangeTest extends SparkSpec with Matchers {
         }).toDF("trend", "x", "y")
 
         trendDF.show
-        assert(trendDF.count == 4171)
+        assert(trendDF.count == 1)
 
         /* 
         +-----+-------------------+-----+
