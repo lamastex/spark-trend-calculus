@@ -1,4 +1,4 @@
-package org.lamastex.trendcalculus
+package org.lamastex.spark.trendcalculus
 
 import org.scalatest.Matchers
 
@@ -13,9 +13,9 @@ class BrentTest extends SparkSpec with Matchers {
     import org.apache.spark.sql.functions._
     import spark.implicits._
 
-    import org.lamastex.trendcalculus.DateUtils.Frequency
-    import org.lamastex.trendcalculus.SeriesUtils.FillingStrategy
-    import org.lamastex.trendcalculus._
+    import org.lamastex.spark.trendcalculus.DateUtils.Frequency
+    import org.lamastex.spark.trendcalculus.SeriesUtils.FillingStrategy
+    import org.lamastex.spark.trendcalculus._
 
 /*     val spark = SparkSession.builder().appName("gdelt-harness").getOrCreate()
     val sqlContext = spark.sqlContext */
@@ -24,7 +24,7 @@ class BrentTest extends SparkSpec with Matchers {
     val valueUDF = udf((s: String) => s.toDouble)
 
     // Only keep brent with data we know could match ours
-    val filePathRoot: String = "file:///root/GIT/lamastex/spark-trend-calculus/src/test/resources/org/lamastex/trendcalculus/"
+    val filePathRoot: String = "file:///root/GIT/lamastex/spark-trend-calculus/src/test/resources/org/lamastex/spark/trendcalculus/"
     val DF = spark.read.option("header", "true").option("inferSchema", "true").csv(filePathRoot+"brent.csv").filter(year(col("DATE")) >= 2015)
     // val DF = Source.fromInputStream(this.getClass.getResourceAsStream("brent.csv"), "UTF-8").filter(year(col("DATE")) >= 2015)
     DF.show
