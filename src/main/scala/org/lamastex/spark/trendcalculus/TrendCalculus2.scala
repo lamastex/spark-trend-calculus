@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package org.lamastex.trendcalculus
+package org.lamastex.spark.trendcalculus
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._

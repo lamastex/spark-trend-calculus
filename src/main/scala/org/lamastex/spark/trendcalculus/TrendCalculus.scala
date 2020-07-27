@@ -14,59 +14,12 @@
 
 package org.lamastex.spark.trendcalculus
 
-    val fhlsSpec = Window.partitionBy($"window_start")
-
-    val xMoveUDF = udf({ (x: Long, y: Double, compare: Double, defaultZero: Boolean) => 
-      // Used to move x into row where y is a certain value.
-      // dafaultZero controls if the smallest or largest value of x in window is to be used
-      if (defaultZero) {
-        if (y == compare) x else 0
-      } else {
-        if (y == compare) x else Long.MaxValue
-      }
-    })
-
-    val yMoveUDF = udf({ (x: Long, y: Double, compare: Long, defaultZero: Boolean) => 
-      // Used to move y into row where x is a certain value.
-      // dafaultZero controls if the smallest or largest value of y in window is to be used
-      if (defaultZero) {
-        if (x == compare) y else 0
-      } else {
-        if (x == compare) y else Double.MaxValue
-      }
-    })
-
-    val fhlsSignUDF = udf({ (first_y: Double, second_y: Double) => 
-      if (first_y < second_y) 1 else -1
-    })
-
-    val dfWithHighAndLow = { 
-      dfWithWindows
-        .withColumn("high_y", max($"y").over(fhlsSpec))
-        .withColumn("high_x", min(xMoveUDF($"x",$"y",$"high_y",lit(false))).over(fhlsSpec))
-        .withColumn("low_y", min($"y").over(fhlsSpec))
-        .withColumn("low_x", max(xMoveUDF($"x",$"y",$"low_y",lit(true))).over(fhlsSpec))
-    }
-
-    val resDF = {
-      dfWithHighAndLow
-        .withColumn("first_x", least($"low_x", $"high_x"))
-        .withColumn("first_y", max(yMoveUDF($"x",$"y",$"first_x",lit(true))).over(fhlsSpec))
-        .withColumn("second_x", greatest($"low_x", $"high_x"))
-        .withColumn("second_y", max(yMoveUDF($"x",$"y",$"second_x",lit(true))).over(fhlsSpec))
-        .withColumn("fhls_sign", fhlsSignUDF($"first_y", $"second_y"))
-    }
-
-    resDF
-    //timeseries
-  }
-
 import scala.util.Try
 
 class TrendCalculus(timeseries: Array[Point], groupingFrequency: Frequency.Value) extends Serializable {
 
-  val map: Map[DateUtils.Frequency.Value, Long] = DateUtils.frequencyMillisecond.map(t => (t.frequency, t.milliseconds)).toMap
-  val samplingFrequency: DateUtils.Frequency.Value = DateUtils.findFrequency(timeseries.map(_.x))
+  val map: Map[Frequency.Value, Long] = DateUtils.frequencyMillisecond.map(t => (t.frequency, t.milliseconds)).toMap
+  val samplingFrequency: Frequency.Value = DateUtils.findFrequency(timeseries.map(_.x))
   val groupingMilliseconds: Long = map(groupingFrequency)
   val samplingMilliseconds: Long = map(samplingFrequency)
 

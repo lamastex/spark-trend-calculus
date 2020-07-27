@@ -1,4 +1,4 @@
-package org.lamastex.trendcalculus
+package org.lamastex.spark.trendcalculus
 
 import org.apache.spark.sql.expressions.MutableAggregationBuffer
 import org.apache.spark.sql.expressions.UserDefinedAggregateFunction
