@@ -33,7 +33,11 @@ object YFinance {
     val volume: Option[Int] = try {
       Some(tokens(7).toInt)
     } catch {
-      case e: NumberFormatException => Some(tokens(7).toDouble.toInt)
+      case e: NumberFormatException => try {
+        Some(tokens(7).toDouble.toInt)
+      } catch {
+        case _: Throwable => None
+      }
       case _: Throwable => None
     }
 
