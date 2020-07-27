@@ -1,4 +1,4 @@
-package org.lamastex.trendcalculus
+package org.lamastex.spark.trendcalculus
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession

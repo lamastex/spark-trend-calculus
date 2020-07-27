@@ -9,7 +9,7 @@ class ForeignExchangeTest extends SparkSpec with Matchers {
     // Test that Foreign Exchange parser works as expected
     sparkTest("Foreign Exchange parser") { spark => 
         import spark.implicits._
-        val fxDS = Source.fromInputStream(this.getClass.getResourceAsStream("DAT_ASCII_BCOUSD_M1_2016.csv"), "UTF-8").getLines().toSeq.toDS().map(ForeignExchange.parseFX)
+        val fxDS = Source.fromInputStream(this.getClass.getResourceAsStream("DAT_ASCII_BCOUSD_M1_2016.csv"), "UTF-8").getLines().toSeq.toDS().map(FinanceParsers.parseFX)
         fxDS.show
         assert(fxDS.count == 296922)
     }
@@ -31,7 +31,7 @@ class ForeignExchangeTest extends SparkSpec with Matchers {
             .getLines()
             .toSeq
             .toDS()
-            .map(ForeignExchange.parseFX)
+            .map(FinanceParsers.parseFX)
             .toDF
             .select("time","open")
 

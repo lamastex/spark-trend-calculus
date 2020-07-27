@@ -1,6 +1,6 @@
-package org.lamastex.trendcalculus
+package org.lamastex.spark.trendcalculus
 
-import org.lamastex.trendcalculus.DateUtils.Frequency
+import org.lamastex.spark.trendcalculus.DateUtils.Frequency
 
 object SeriesUtils {
 

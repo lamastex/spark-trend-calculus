@@ -13,9 +13,9 @@ class BrentTest extends SparkSpec with Matchers {
     import org.apache.spark.sql.functions._
     import spark.implicits._
 
-    import org.lamastex.trendcalculus.DateUtils.Frequency
-    import org.lamastex.trendcalculus.SeriesUtils.FillingStrategy
-    import org.lamastex.trendcalculus._
+    import org.lamastex.spark.trendcalculus.DateUtils.Frequency
+    import org.lamastex.spark.trendcalculus.SeriesUtils.FillingStrategy
+    import org.lamastex.spark.trendcalculus._
 
 /*     val spark = SparkSession.builder().appName("gdelt-harness").getOrCreate()
     val sqlContext = spark.sqlContext */
