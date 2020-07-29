@@ -5,7 +5,7 @@ import org.apache.spark.sql.expressions.UserDefinedAggregateFunction
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 
-class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
+class TsToTrend(windowSize: Int, initLine: Option[Row] = None) extends UserDefinedAggregateFunction {
 
   val FIRST = 0
   val HIGH = 1
@@ -30,12 +30,14 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
     Nil
   )
 
+  val emptyPoint = Row(0L, 0.0)
+
   val emptyFhls = Row(
-    Row(0L, 0.0),
-    Row(0L, 0.0),
-    Row(0L, 0.0),
-    Row(0L, 0.0),
-    1
+    emptyPoint,
+    emptyPoint,
+    emptyPoint,
+    emptyPoint,
+    0
   )
 
   // This is the input fields for your aggregate function.
@@ -68,9 +70,12 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
 
   // This is the initial value for your buffer schema.
   override def initialize(buffer: MutableAggregationBuffer): Unit = {
+    val init = initLine.getOrElse(Row(Point(0L, 0.0))).getAs[Point](0)
+    val initPoint = Row(init.x, init.y)
+    val lastFhls = Row(initPoint, initPoint, initPoint, initPoint, 0)
     buffer(0) = (1 to 2*windowSize).map(_ => Row(0L, 0.0)).toSeq
     buffer(1) = 0
-    buffer(2) = Seq[Row](Row(emptyFhls,0,emptyFhls,0,0))
+    buffer(2) = Seq[Row](Row(lastFhls,1,emptyFhls,0,0))
   }
 
   // This is how to update your buffer schema given an input.

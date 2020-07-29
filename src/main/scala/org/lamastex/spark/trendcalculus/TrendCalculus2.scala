@@ -20,17 +20,36 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.expressions.{Window, WindowSpec}
 import java.sql.Timestamp
 
-class TrendCalculus2(timeseries: Dataset[TimePoint], windowSize: Int, spark: SparkSession) {
+class TrendCalculus2(timeseries: Dataset[TimePoint], windowSize: Int, spark: SparkSession, initZero: Boolean = true) {
 
   import spark.implicits._
 
   val windowSpec = Window.rowsBetween(Window.unboundedPreceding, 0)
 
   def getReversals: Dataset[(TimePoint, String)] = {
-    timeseries
-      .map(r => (Point(r.x.getTime(), r.y), "dummy"))
-      .toDF("point","dummy")
-      .withColumn("fhls", new TsToTrend(windowSize)($"point").over(windowSpec))
+
+    val tmp = if (initZero) {
+      timeseries
+        .map(r => (Point(r.x.getTime(), r.y), "dummy"))
+        .toDF("point","dummy")
+        .withColumn("fhls", new TsToTrend(windowSize)($"point").over(windowSpec))
+    } else {
+      val initPoint = try {
+        timeseries.first
+      } catch {
+        case e: NoSuchElementException => return spark.emptyDataset[(TimePoint, String)].toDF("reversalPoint", "reversal").as[(TimePoint, String)]
+      }
+      
+      val init = Some(Row(Point(initPoint.x.getTime, initPoint.y)))
+
+      timeseries
+        .rdd.mapPartitionsWithIndex{ (id_x, iter) => if (id_x == 0) iter.drop(1) else iter }.toDS
+        .map(r => (Point(r.x.getTime(), r.y), "dummy"))
+        .toDF("point","dummy")
+        .withColumn("fhls", new TsToTrend(windowSize, init)($"point").over(windowSpec))
+    }
+
+    tmp
       .select(explode($"fhls") as "tmp")
       .select($"tmp.fhls".as("fhls"), $"tmp.trend".as("trend"), $"tmp.lastTrend".as("lastTrend"), $"tmp.lastFhls".as("lastFHLS"), $"tmp.reversal".as("reversal"))
       .filter($"reversal" =!= 0)

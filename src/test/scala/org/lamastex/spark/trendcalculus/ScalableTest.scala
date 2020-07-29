@@ -27,9 +27,12 @@ class ScalableTest extends SparkSpec with Matchers {
     val windowSize = 20
 
     val tc = new TrendCalculus2(pointDS, windowSize, spark)
+    val tc2 = new TrendCalculus2(pointDS, windowSize, spark, false)
 
     val reversalTS = tc.getReversals
+    val reversalTS2 = tc2.getReversals
     reversalTS.show(false)
+    reversalTS2.show(false)
   }
 }
 
