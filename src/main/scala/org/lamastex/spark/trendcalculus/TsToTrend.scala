@@ -48,9 +48,7 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
   override def bufferSchema: StructType = StructType(
     StructField("bufferedPoints", ArrayType(pointSchema)) ::
     StructField("counter", IntegerType) ::
-    StructField("lastFHLS", fhlsSchema) ::
-    StructField("currFHLS", fhlsSchema) ::
-    StructField("lastTrend", IntegerType) ::
+    StructField("result", dataType) ::
     Nil
   )
 
@@ -72,9 +70,7 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
   override def initialize(buffer: MutableAggregationBuffer): Unit = {
     buffer(0) = (1 to 2*windowSize).map(_ => Row(0L, 0.0)).toSeq
     buffer(1) = 0
-    buffer(2) = emptyFhls
-    buffer(3) = emptyFhls
-    buffer(4) = 0
+    buffer(2) = Seq[Row](Row(emptyFhls,0,emptyFhls,0,0))
   }
 
   // This is how to update your buffer schema given an input.
@@ -85,13 +81,12 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
     buffer(0) = newSeq.take(2*windowSize)
     buffer(1) = newCounter
     if (newCounter == 0) {
-      val prevFHLS = buffer.getStruct(2)
-      val currFHLS = buffer.getStruct(3)
-      val lastTrend = calcLastTrend(prevFHLS, currFHLS, buffer.getInt(4))
+      val prevRes: Row = buffer.getSeq(2).last
 
-      buffer(2) = currFHLS
-      buffer(3) = makeFHLS(newSeq.take(windowSize))
-      buffer(4) = lastTrend
+      val currFHLS = makeFHLS(newSeq.take(windowSize))
+      val prevFHLS = prevRes.getStruct(0)
+      val lastTrend = prevRes.getInt(1)
+      buffer(2) = getTrend(prevFHLS,currFHLS,lastTrend)
     }
   }
 
@@ -106,50 +101,11 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
     val counter = buffer.getInt(1)
 
     if (counter == 0) {
-      val prevFHLS = buffer.getStruct(2)
-      val currFHLS = buffer.getStruct(3)
-      val lastTrend = buffer.getInt(4)
-      getTrend(prevFHLS, currFHLS, lastTrend)
+      buffer.getSeq(2)
     } else {
       Seq.empty[Row]
     }
     
-  }
-
-  private def calcLastTrend(prevFHLS: Row, currFHLS: Row, lastTrend: Int): Int = {
-    val prevHigh = prevFHLS.getStruct(HIGH)
-    val currHigh = currFHLS.getStruct(HIGH)
-    val prevLow = prevFHLS.getStruct(LOW)
-    val currLow = currFHLS.getStruct(LOW)
-
-    var candidate = (
-      (currHigh.getDouble(Y) - prevHigh.getDouble(Y)).signum + 
-      (currLow.getDouble(Y) - prevLow.getDouble(Y)).signum).signum
-
-    if (candidate != 0) {
-      return candidate
-    }
-
-    val intrFirst = prevFHLS.getStruct(SECOND)
-    val intrSecond = currFHLS.getStruct(FIRST)
-    val List(intrLow,intrHigh) = if (intrFirst.getDouble(Y) < intrSecond.getDouble(Y)) {
-      List(intrFirst, intrSecond)
-    } else {
-      List(intrSecond, intrFirst)
-    }
-
-    var intrTrend = (
-      (intrHigh.getDouble(Y) - prevHigh.getDouble(Y)).signum +
-      (intrLow.getDouble(Y) - prevLow.getDouble(Y)).signum).signum
-
-    candidate = (
-      (currHigh.getDouble(Y) - intrHigh.getDouble(Y)).signum +
-      (currLow.getDouble(Y) - intrLow.getDouble(Y)).signum).signum
-
-    if (intrTrend == 0) intrTrend == lastTrend
-    if (candidate == 0) candidate == intrTrend
-
-    candidate
   }
 
   private def makeFHLS(points: Seq[Row]): Row = {
@@ -163,7 +119,6 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
   }
 
   private def getTrend(prevFHLS: Row, currFHLS: Row, lastTrend: Int): Seq[Row] = {
-
     val prevHigh = prevFHLS.getStruct(HIGH)
     val currHigh = currFHLS.getStruct(HIGH)
     val prevLow = prevFHLS.getStruct(LOW)
@@ -200,8 +155,8 @@ class TsToTrend(windowSize: Int) extends UserDefinedAggregateFunction {
       (currHigh.getDouble(Y) - intrHigh.getDouble(Y)).signum +
       (currLow.getDouble(Y) - intrLow.getDouble(Y)).signum).signum
 
-    if (intrTrend == 0) intrTrend == lastTrend
-    if (currTrend == 0) currTrend == intrTrend
+    if (intrTrend == 0) intrTrend = lastTrend
+    if (currTrend == 0) currTrend = intrTrend
 
     val intrFHLS = Row(
       intrFirst,

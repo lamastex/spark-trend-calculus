@@ -17,13 +17,14 @@ class ScalableTest extends SparkSpec with Matchers {
     val filePathRoot: String = "src/test/resources/org/lamastex/spark/trendcalculus/"
     val df = spark.read.option("header", "true").option("inferSchema", "true").csv(filePathRoot+"brent.csv").filter(year(col("DATE")) >= 2015)
 
-    val toMilliUDF = udf( { time: java.sql.Timestamp => time.getTime() } )
-    val milliDF = df.withColumn("TIME", toMilliUDF($"DATE")).drop("DATE")
-    val pointDS = milliDF.select($"TIME".as("x"), $"VALUE".as("y")).as[Point]
+    // val toMilliUDF = udf( { time: java.sql.Timestamp => time.getTime() } )
+    // val milliDF = df.withColumn("TIME", toMilliUDF($"DATE")).drop("DATE")
+    // val pointDS = milliDF.select($"TIME".as("x"), $"VALUE".as("y")).as[Point]
+    val pointDS = df.select($"DATE" as "x", $"VALUE" as "y").as[TimePoint]
 
     pointDS.show
 
-    val windowSize = 3
+    val windowSize = 20
 
     val tc = new TrendCalculus2(pointDS, windowSize, spark)
 
