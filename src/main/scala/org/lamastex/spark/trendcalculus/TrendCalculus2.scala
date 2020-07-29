@@ -62,23 +62,4 @@ class TrendCalculus2(timeseries: Dataset[TimePoint], windowSize: Int, spark: Spa
       .select($"_1" as "reversalPoint", $"_2" as "reversal")
       .as[(TimePoint,String)]
   }
-
-  private def tsToFHLSWithRev(ts: Dataset[Point]): Dataset[Row] = {
-    ts
-      .map(r => (Point(r.x, r.y), "dummy"))
-      .toDF("point","dummy")
-      .withColumn("fhls", new TsToTrend(windowSize)($"point").over(windowSpec))
-      .select(explode($"fhls") as "tmp")
-      .select($"tmp.fhls".as("fhls"), $"tmp.trend".as("trend"), $"tmp.lastTrend".as("lastTrend"), $"tmp.lastFhls".as("lastFHLS"), $"tmp.reversal".as("reversal"))
-  }
-
-  def trendToRev(df: Dataset[Row]): Dataset[(Point, Int)] = {
-    df
-      .filter($"reversal" =!= 0)
-      .select($"lastFHLS", $"reversal")
-      .withColumn("reversalPoint", when($"reversal" === -1, $"lastFHLS.high").otherwise($"lastFHLS.low"))
-      .select($"reversalPoint", $"reversal")
-      .as[(Point,Int)]
-      .filter($"reversalPoint.x" =!= 0L)
-  }
 }
