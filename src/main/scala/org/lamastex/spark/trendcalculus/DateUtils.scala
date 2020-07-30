@@ -109,19 +109,4 @@ object DateUtils {
     }
   }
 
-  case class FrequencyMillisecond(
-                                   frequency: Frequency.Value,
-                                   milliseconds: Long
-                                 )
-
-  case class MonthYear(
-                        quarter: Int,
-                        half: Int
-                      )
-
-  object Frequency extends Enumeration with Serializable {
-    val UNKWOWN, MILLI_SECOND, SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, QUARTER, HALF_YEAR, YEAR = Value
-  }
-
-
 }

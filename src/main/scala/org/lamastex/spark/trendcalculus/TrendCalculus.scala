@@ -14,14 +14,12 @@
 
 package org.lamastex.spark.trendcalculus
 
-import org.lamastex.spark.trendcalculus.DateUtils.Frequency
-
 import scala.util.Try
 
 class TrendCalculus(timeseries: Array[Point], groupingFrequency: Frequency.Value) extends Serializable {
 
-  val map: Map[DateUtils.Frequency.Value, Long] = DateUtils.frequencyMillisecond.map(t => (t.frequency, t.milliseconds)).toMap
-  val samplingFrequency: DateUtils.Frequency.Value = DateUtils.findFrequency(timeseries.map(_.x))
+  val map: Map[Frequency.Value, Long] = DateUtils.frequencyMillisecond.map(t => (t.frequency, t.milliseconds)).toMap
+  val samplingFrequency: Frequency.Value = DateUtils.findFrequency(timeseries.map(_.x))
   val groupingMilliseconds: Long = map(groupingFrequency)
   val samplingMilliseconds: Long = map(samplingFrequency)
 
@@ -49,7 +47,7 @@ class TrendCalculus(timeseries: Array[Point], groupingFrequency: Frequency.Value
           .sortBy(_._1)
 
         val high = sortedWSeries.last._2.head //earliest high price
-      val low = sortedWSeries.head._2.last //latest low price
+        val low = sortedWSeries.head._2.last //latest low price
 
         val List(left, right) = List(high, low).sorted(Ordering.by((p: Point) => p.x))
         val leftSeries = wSeries.filter(_.x < left.x)

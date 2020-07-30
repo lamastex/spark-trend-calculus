@@ -18,8 +18,6 @@ class ForeignExchangeTest extends SparkSpec with Matchers {
     sparkTest("Foreign Exchange Trend Calculus") { spark =>
         import spark.implicits._
 
-        import org.lamastex.spark.trendcalculus.DateUtils.Frequency
-        import org.lamastex.spark.trendcalculus.SeriesUtils.FillingStrategy
         import org.lamastex.spark.trendcalculus._
 
         val fxDF = Source

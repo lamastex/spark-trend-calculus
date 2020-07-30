@@ -1,7 +1,5 @@
 package org.lamastex.spark.trendcalculus
 
-import org.lamastex.spark.trendcalculus.DateUtils.Frequency
-
 object SeriesUtils {
 
   def movingAverage(timeseries: Array[Point], grouping: Frequency.Value): Unit = {
@@ -125,14 +123,6 @@ object SeriesUtils {
       }
       .toArray
       .sorted(Ordering.by((p: Point) => p.x))
-  }
-
-  object FillingStrategy extends Enumeration with Serializable {
-    val MEAN, LOCF, LINEAR, ZERO = Value
-  }
-
-  object AggregateStrategy extends Enumeration with Serializable {
-    val MEAN, SUM = Value
   }
 
 }

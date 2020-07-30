@@ -47,4 +47,26 @@ package object trendcalculus {
      yfin(Seq(inputPath): _*)
     }
   }
+
+  case class FrequencyMillisecond(
+                                   frequency: Frequency.Value,
+                                   milliseconds: Long
+                                 )
+
+  case class MonthYear(
+                        quarter: Int,
+                        half: Int
+                      )
+
+  object FillingStrategy extends Enumeration with Serializable {
+    val MEAN, LOCF, LINEAR, ZERO = Value
+  }
+
+  object AggregateStrategy extends Enumeration with Serializable {
+    val MEAN, SUM = Value
+  }
+
+  object Frequency extends Enumeration with Serializable {
+    val UNKWOWN, MILLI_SECOND, SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, QUARTER, HALF_YEAR, YEAR = Value
+  }
 }
