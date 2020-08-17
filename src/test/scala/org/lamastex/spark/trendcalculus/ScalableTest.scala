@@ -35,8 +35,8 @@ class ScalableTest extends SparkSpec with Matchers {
     reversalTS.show(false)
     reversalTS2.show(false)
 
-    val nReversalTSs = tc.nReversals(n)
-    nReversalTSs.last.show(false)
+    val nReversalTSs = tc.nReversalsJoinedWithMaxRev(n)
+    nReversalTSs.show(false)
   }
 }
 

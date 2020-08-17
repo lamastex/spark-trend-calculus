@@ -135,4 +135,26 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
 
     tmpDSs
   }
+
+  def nReversalsJoined(numReversals: Int): DataFrame = {
+    val revDSs = nReversals(numReversals)
+    revDSs.map(_.cache.count)
+    val joinedDF = revDSs
+      .zipWithIndex
+      .map{ case (ds: Dataset[Reversal], i: Int) => ds.toDF.withColumnRenamed("reversal", s"reversal${i+1}") }
+      .foldLeft(timeseries.toDF)( (acc: DataFrame, ds: DataFrame) => acc.join(ds, $"x" === $"tickerPoint.x", "left").drop("tickerPoint") )
+    joinedDF
+  }
+
+  def nReversalsJoinedWithMaxRev(numReversals: Int): DataFrame = {
+    val joinedDF = nReversalsJoined(numReversals)
+
+    val dfWithMaxRev = joinedDF.map{ r =>
+      val maxRev: Int = (3 to numReversals+2).find(r.isNullAt(_)).getOrElse(numReversals+3) - 3
+      (r.getAs[Timestamp](1),maxRev)
+    }.toDF("x","maxRev")
+
+    val joinedDFWithMaxRev = joinedDF.join(dfWithMaxRev, "x").orderBy("x")
+    joinedDFWithMaxRev
+  }
 }
