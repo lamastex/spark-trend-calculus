@@ -20,19 +20,23 @@ class ScalableTest extends SparkSpec with Matchers {
     // val toMilliUDF = udf( { time: java.sql.Timestamp => time.getTime() } )
     // val milliDF = df.withColumn("TIME", toMilliUDF($"DATE")).drop("DATE")
     // val pointDS = milliDF.select($"TIME".as("x"), $"VALUE".as("y")).as[Point]
-    val pointDS = df.select($"DATE" as "x", $"VALUE" as "y").as[TimePoint]
+    val pointDS = df.withColumn("ticker", lit("brent")).select($"ticker", $"DATE" as "x", $"VALUE" as "y").as[TickerPoint]
 
     pointDS.show
 
-    val windowSize = 20
+    val windowSize = 2
+    val n = 5
 
     val tc = new TrendCalculus2(pointDS, windowSize, spark)
     val tc2 = new TrendCalculus2(pointDS, windowSize, spark, false)
 
-    val reversalTS = tc.getReversals
-    val reversalTS2 = tc2.getReversals
+    val reversalTS = tc.reversals
+    val reversalTS2 = tc2.reversals
     reversalTS.show(false)
     reversalTS2.show(false)
+
+    val nReversalTSs = tc.nReversals(n)
+    nReversalTSs.last.show(false)
   }
 }
 

@@ -5,7 +5,13 @@ case class Point(
                   y: Double
                 )
 
-case class TimePoint(
+case class TickerPoint(
+  ticker: String,
   x: java.sql.Timestamp,
   y: Double
+)
+
+case class Reversal(
+  tickerPoint: TickerPoint,
+  reversal: Int
 )

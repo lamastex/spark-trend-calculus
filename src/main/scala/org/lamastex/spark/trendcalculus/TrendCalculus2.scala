@@ -16,50 +16,123 @@ package org.lamastex.spark.trendcalculus
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-
-import org.apache.spark.sql.expressions.{Window, WindowSpec}
+import org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode, Trigger}
 import java.sql.Timestamp
 
-class TrendCalculus2(timeseries: Dataset[TimePoint], windowSize: Int, spark: SparkSession, initZero: Boolean = true) {
+class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: SparkSession, initZero: Boolean = true) extends Serializable {
 
   import spark.implicits._
 
-  val windowSpec = Window.rowsBetween(Window.unboundedPreceding, 0)
+  private case class FHLS(first: TickerPoint, high: TickerPoint, low: TickerPoint, second: TickerPoint)  
+  private case class FHLSWithTrend(fhls: FHLS,trend: Int)
+  private case class State(lastFHLS: FHLS, lastTrend: Int, buffer: Seq[TickerPoint])
 
-  def getReversals: Dataset[(TimePoint, String)] = {
+  private val emptyPoint = TickerPoint("", new Timestamp(0L), 0.0)
+  private val emptyFHLS = FHLS(emptyPoint,emptyPoint,emptyPoint,emptyPoint)
 
-    val tmp = if (initZero) {
-      timeseries
-        .map(r => (Point(r.x.getTime(), r.y), "dummy"))
-        .toDF("point","dummy")
-        .withColumn("fhls", new TsToTrend(windowSize)($"point").over(windowSpec))
-    } else {
-      val initPoint = try {
-        timeseries.first
-      } catch {
-        case e: NoSuchElementException => return spark.emptyDataset[(TimePoint, String)].toDF("reversalPoint", "reversal").as[(TimePoint, String)]
-      }
+  private def makeFHLS(points: Seq[TickerPoint]): FHLS = {
+    val sortedByVal = points.groupBy(_.y).map{case (v,vSeq) => (v,vSeq.sortBy(_.x.getTime))}.toSeq.sortBy(_._1)
+    val high = sortedByVal.last._2.head //Should be last head
+    val low = sortedByVal.head._2.last //Should be head last
+    val List(first,second) = if (low.x.getTime < high.x.getTime) List(low,high) else List(high,low)
+    FHLS(first,high,low,second)
+  }
+  
+  // Go through computed fhls to compute trends and intermediate windows for zero trends.
+  private def getIntrAndTrends(prevFHLSWithTrends: Seq[FHLSWithTrend], currFHLS: FHLS): Seq[FHLSWithTrend] = {
+    val prevFHLSWithTrend = prevFHLSWithTrends.last
+    val prevFHLS = prevFHLSWithTrend.fhls
+    val prevHigh = prevFHLS.high
+    val currHigh = currFHLS.high
+    val prevLow = prevFHLS.low
+    val currLow = currFHLS.low
+    
+    var currTrend = (
+      (currHigh.y - prevHigh.y).signum + 
+      (currLow.y - prevLow.y).signum).signum
+    
+    // If the trend is non-zero, no intermediate window is necessary
+    if (currTrend != 0) return Seq(FHLSWithTrend(currFHLS, currTrend))
+    
+    val intrFirst = prevFHLS.second
+    val intrSecond = currFHLS.first
+    val List(intrLow, intrHigh) = Seq(intrFirst, intrSecond).sortBy(_.y)
+    
+    var intrTrend = (
+      (intrHigh.y - prevHigh.y).signum + 
+      (intrLow.y - prevLow.y).signum).signum
+    
+    currTrend = (
+      (currHigh.y - intrHigh.y).signum + 
+      (currLow.y - intrLow.y).signum).signum
+    
+    if (intrTrend == 0) intrTrend = prevFHLSWithTrend.trend
+    if (currTrend == 0) currTrend = intrTrend
+    
+    val intrFHLS = FHLS(first=intrFirst, high=intrHigh, low=intrLow, second=intrSecond)
+    
+    return Seq(FHLSWithTrend(intrFHLS, intrTrend), FHLSWithTrend(currFHLS, currTrend))
+  }
+
+  private def trendToRev(prevFhlsWithTrend: FHLSWithTrend, currFhlsWithTrend: FHLSWithTrend): Option[Reversal] = {
+    val rev = (currFhlsWithTrend.trend - prevFhlsWithTrend.trend).signum
+    rev match {
+      case 0 => None
+      case 1 => Some(Reversal(prevFhlsWithTrend.fhls.low, rev))
+      case _ => Some(Reversal(prevFhlsWithTrend.fhls.high, rev))
+    }
+  }
+
+  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[State]): Iterator[Reversal] = {
+    
+    val values: Seq[TickerPoint] = inputs.toSeq
+
+    val initialState = State(
+        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
+        lastTrend = 0,
+        buffer = Seq[TickerPoint]()
+      )
+
+    val oldState: State = state.getOption.getOrElse(initialState)
+    
+    val buffer: Seq[TickerPoint] = (oldState.buffer ++ (if (state.getOption.isEmpty && !initZero) values.tail else values)).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
+    val toFHLS = buffer.dropRight(buffer.length % windowSize) // need multiple of windowsize to make fhls of size windowsize
+    val remainingBuffer = buffer.takeRight(buffer.length % windowSize) // remaining part of buffer, is sent to next state
+    
+    val windows = toFHLS.sliding(windowSize, windowSize).toList.map(_.toSeq)
+    val fhlsSeq = windows.map(makeFHLS)
+    
+    val lastFHLSWithTrend = FHLSWithTrend(oldState.lastFHLS, oldState.lastTrend)
+    
+    val fhlsWithTrendSeq = fhlsSeq.scanLeft(Seq(lastFHLSWithTrend))(getIntrAndTrends).flatten.toSeq
+    
+    val reversalIter = fhlsWithTrendSeq.sliding(2,1).flatMap(ls => trendToRev(ls.head, ls.last))
+    
+    val newLastFHLSWithTrend = fhlsWithTrendSeq.last
+    val newState = State(newLastFHLSWithTrend.fhls, newLastFHLSWithTrend.trend, remainingBuffer)
+    state.update(newState)
+    
+    reversalIter
+  }
+
+  private def getReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
+    ts
+      .groupByKey{ tp => tp.ticker }
+      .flatMapGroupsWithState[State, Reversal](
+        outputMode = OutputMode.Append,
+        timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
+      .filter($"tickerPoint.ticker" =!= "")
       
-      val init = Some(Row(Point(initPoint.x.getTime, initPoint.y)))
+  }
 
-      timeseries
-        .rdd.mapPartitionsWithIndex{ (id_x, iter) => if (id_x == 0) iter.drop(1) else iter }.toDS
-        .map(r => (Point(r.x.getTime(), r.y), "dummy"))
-        .toDF("point","dummy")
-        .withColumn("fhls", new TsToTrend(windowSize, init)($"point").over(windowSpec))
+  def reversals: Dataset[Reversal] = getReversals(timeseries)
+
+  def nReversals(numReversals: Int): Seq[Dataset[Reversal]] = {
+    var tmpDSs: Seq[Dataset[Reversal]] = Seq(reversals)
+    for (i <- (2 to numReversals)) {
+      tmpDSs = tmpDSs :+ getReversals(tmpDSs.last.toDF.select($"tickerPoint.ticker", $"tickerPoint.x", $"tickerPoint.y").as[TickerPoint])
     }
 
-    tmp
-      .select(explode($"fhls") as "tmp")
-      .select($"tmp.fhls".as("fhls"), $"tmp.trend".as("trend"), $"tmp.lastTrend".as("lastTrend"), $"tmp.lastFhls".as("lastFHLS"), $"tmp.reversal".as("reversal"))
-      .filter($"reversal" =!= 0)
-      .select($"lastFHLS", $"reversal" as "reversalInt")
-      .withColumn("reversalPoint", when($"reversalInt" === -1, $"lastFHLS.high").otherwise($"lastFHLS.low"))
-      .withColumn("reversal", when($"reversalInt" === -1, lit("Top")).otherwise(lit("Bottom")))
-      .select($"reversalPoint", $"reversal")
-      .filter($"reversalPoint.x" =!= 0L)
-      .map( r => (TimePoint(new Timestamp(r.getStruct(0).getLong(0)), r.getStruct(0).getDouble(1)), r.getString(1)))
-      .select($"_1" as "reversalPoint", $"_2" as "reversal")
-      .as[(TimePoint,String)]
+    tmpDSs
   }
 }
