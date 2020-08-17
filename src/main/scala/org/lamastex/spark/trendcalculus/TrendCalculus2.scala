@@ -142,7 +142,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     val joinedDF = revDSs
       .zipWithIndex
       .map{ case (ds: Dataset[Reversal], i: Int) => ds.toDF.withColumnRenamed("reversal", s"reversal${i+1}") }
-      .foldLeft(timeseries.toDF)( (acc: DataFrame, ds: DataFrame) => acc.join(ds, $"x" === $"tickerPoint.x", "left").drop("tickerPoint") )
+      .foldLeft(timeseries.toDF)( (acc: DataFrame, ds: DataFrame) => acc.join(ds, $"ticker" === $"tickerPoint.ticker" && $"x" === $"tickerPoint.x", "left").drop("tickerPoint") )
     joinedDF
   }
 
@@ -151,10 +151,10 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
 
     val dfWithMaxRev = joinedDF.map{ r =>
       val maxRev: Int = (3 to numReversals+2).find(r.isNullAt(_)).getOrElse(numReversals+3) - 3
-      (r.getAs[Timestamp](1),maxRev)
-    }.toDF("x","maxRev")
+      (r.getString(0), r.getAs[Timestamp](1),maxRev)
+    }.toDF("tickerTmp", "xTmp","maxRev")
 
-    val joinedDFWithMaxRev = joinedDF.join(dfWithMaxRev, "x").orderBy("x")
+    val joinedDFWithMaxRev = joinedDF.join(dfWithMaxRev, $"ticker" === $"tickerTmp" && $"x" === $"xTmp").drop("tickerTmp", "xTmp").orderBy("x")
     joinedDFWithMaxRev
   }
 }
