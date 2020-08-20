@@ -15,3 +15,10 @@ case class Reversal(
   tickerPoint: TickerPoint,
   reversal: Int
 )
+
+case class FlatReversal(
+  ticker: String,
+  x: java.sql.Timestamp,
+  y: Double,
+  reversal: Int
+)
