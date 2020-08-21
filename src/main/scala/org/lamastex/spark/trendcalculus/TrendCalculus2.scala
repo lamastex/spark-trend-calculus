@@ -23,23 +23,19 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
 
   import spark.implicits._
 
-  private case class FHLS(first: TickerPoint, high: TickerPoint, low: TickerPoint, second: TickerPoint)  
-  private case class FHLSWithTrend(fhls: FHLS,trend: Int)
-  private case class State(lastFHLS: FHLS, lastTrend: Int, buffer: Seq[TickerPoint])
-
   private val emptyPoint = TickerPoint("", new Timestamp(0L), 0.0)
-  private val emptyFHLS = FHLS(emptyPoint,emptyPoint,emptyPoint,emptyPoint)
+  private val emptyFHLS = TrendCalculus2.FHLS(emptyPoint,emptyPoint,emptyPoint,emptyPoint)
 
-  private def makeFHLS(points: Seq[TickerPoint]): FHLS = {
+  private def makeFHLS(points: Seq[TickerPoint]): TrendCalculus2.FHLS = {
     val sortedByVal = points.groupBy(_.y).map{case (v,vSeq) => (v,vSeq.sortBy(_.x.getTime))}.toSeq.sortBy(_._1)
     val high = sortedByVal.last._2.head //Should be last head
     val low = sortedByVal.head._2.last //Should be head last
     val List(first,second) = if (low.x.getTime < high.x.getTime) List(low,high) else List(high,low)
-    FHLS(first,high,low,second)
+    TrendCalculus2.FHLS(first,high,low,second)
   }
   
   // Go through computed fhls to compute trends and intermediate windows for zero trends.
-  private def getIntrAndTrends(prevFHLSWithTrends: Seq[FHLSWithTrend], currFHLS: FHLS): Seq[FHLSWithTrend] = {
+  private def getIntrAndTrends(prevFHLSWithTrends: Seq[TrendCalculus2.FHLSWithTrend], currFHLS: TrendCalculus2.FHLS): Seq[TrendCalculus2.FHLSWithTrend] = {
     val prevFHLSWithTrend = prevFHLSWithTrends.last
     val prevFHLS = prevFHLSWithTrend.fhls
     val prevHigh = prevFHLS.high
@@ -52,7 +48,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
       (currLow.y - prevLow.y).signum).signum
     
     // If the trend is non-zero, no intermediate window is necessary
-    if (currTrend != 0) return Seq(FHLSWithTrend(currFHLS, currTrend))
+    if (currTrend != 0) return Seq(TrendCalculus2.FHLSWithTrend(currFHLS, currTrend))
     
     val intrFirst = prevFHLS.second
     val intrSecond = currFHLS.first
@@ -69,12 +65,12 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     if (intrTrend == 0) intrTrend = prevFHLSWithTrend.trend
     if (currTrend == 0) currTrend = intrTrend
     
-    val intrFHLS = FHLS(first=intrFirst, high=intrHigh, low=intrLow, second=intrSecond)
+    val intrFHLS = TrendCalculus2.FHLS(first=intrFirst, high=intrHigh, low=intrLow, second=intrSecond)
     
-    return Seq(FHLSWithTrend(intrFHLS, intrTrend), FHLSWithTrend(currFHLS, currTrend))
+    return Seq(TrendCalculus2.FHLSWithTrend(intrFHLS, intrTrend), TrendCalculus2.FHLSWithTrend(currFHLS, currTrend))
   }
 
-  private def trendToRev(prevFhlsWithTrend: FHLSWithTrend, currFhlsWithTrend: FHLSWithTrend): Option[Reversal] = {
+  private def trendToRev(prevFhlsWithTrend: TrendCalculus2.FHLSWithTrend, currFhlsWithTrend: TrendCalculus2.FHLSWithTrend): Option[Reversal] = {
     val rev = (currFhlsWithTrend.trend - prevFhlsWithTrend.trend).signum
     rev match {
       case 0 => None
@@ -83,17 +79,17 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     }
   }
 
-  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[State]): Iterator[Reversal] = {
+  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[TrendCalculus2.State]): Iterator[Reversal] = {
     
     val values: Seq[TickerPoint] = inputs.toSeq
 
-    val initialState = State(
+    val initialState = TrendCalculus2.State(
         lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
         lastTrend = 0,
         buffer = Seq[TickerPoint]()
       )
 
-    val oldState: State = state.getOption.getOrElse(initialState)
+    val oldState: TrendCalculus2.State = state.getOption.getOrElse(initialState)
     
     val buffer: Seq[TickerPoint] = (oldState.buffer ++ (if (state.getOption.isEmpty && !initZero) values.tail else values)).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
     val toFHLS = buffer.dropRight(buffer.length % windowSize) // need multiple of windowsize to make fhls of size windowsize
@@ -102,14 +98,14 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     val windows = toFHLS.sliding(windowSize, windowSize).toList.map(_.toSeq)
     val fhlsSeq = windows.map(makeFHLS)
     
-    val lastFHLSWithTrend = FHLSWithTrend(oldState.lastFHLS, oldState.lastTrend)
+    val lastFHLSWithTrend = TrendCalculus2.FHLSWithTrend(oldState.lastFHLS, oldState.lastTrend)
     
     val fhlsWithTrendSeq = fhlsSeq.scanLeft(Seq(lastFHLSWithTrend))(getIntrAndTrends).flatten.toSeq
     
     val reversalIter = fhlsWithTrendSeq.sliding(2,1).flatMap(ls => trendToRev(ls.head, ls.last))
     
     val newLastFHLSWithTrend = fhlsWithTrendSeq.last
-    val newState = State(newLastFHLSWithTrend.fhls, newLastFHLSWithTrend.trend, remainingBuffer)
+    val newState = TrendCalculus2.State(newLastFHLSWithTrend.fhls, newLastFHLSWithTrend.trend, remainingBuffer)
     state.update(newState)
     
     reversalIter
@@ -118,7 +114,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
   private def getReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
     ts
       .groupByKey{ tp => tp.ticker }
-      .flatMapGroupsWithState[State, Reversal](
+      .flatMapGroupsWithState[TrendCalculus2.State, Reversal](
         outputMode = OutputMode.Append,
         timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
       .filter($"tickerPoint.ticker" =!= "")
@@ -137,6 +133,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
   }
 
   def nReversalsJoined(numReversals: Int): DataFrame = {
+    if (timeseries.isStreaming) throw new IllegalArgumentException("Not supported on streaming dataframes.")
     val revDSs = nReversals(numReversals)
     revDSs.map(_.cache.count)
     val joinedDF = revDSs
@@ -147,6 +144,8 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
   }
 
   def nReversalsJoinedWithMaxRev(numReversals: Int): DataFrame = {
+    if (timeseries.isStreaming) throw new IllegalArgumentException("Not supported on streaming dataframes.")
+
     val joinedDF = nReversalsJoined(numReversals)
 
     val dfWithMaxRev = joinedDF.map{ r =>
@@ -157,4 +156,10 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     val joinedDFWithMaxRev = joinedDF.join(dfWithMaxRev, $"ticker" === $"tickerTmp" && $"x" === $"xTmp").drop("tickerTmp", "xTmp").orderBy("x")
     joinedDFWithMaxRev
   }
+}
+
+object TrendCalculus2 {
+  case class FHLS(first: TickerPoint, high: TickerPoint, low: TickerPoint, second: TickerPoint)  
+  case class FHLSWithTrend(fhls: FHLS,trend: Int)
+  case class State(lastFHLS: FHLS, lastTrend: Int, buffer: Seq[TickerPoint])
 }
