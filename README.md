@@ -13,8 +13,8 @@ Antoine's codes used to start this library:
 
 Example use cases:
 
-- https://github.com/lamastex/spark-texata-2020
-- 
+- https://github.com/lamastex/spark-gdelt-examples
+- https://github.com/lamastex/spark-trend-calculus-examples
 
 ## Included parsers
 
