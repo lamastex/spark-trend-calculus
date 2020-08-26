@@ -16,6 +16,34 @@ Example use cases:
 - https://github.com/lamastex/spark-gdelt-examples
 - https://github.com/lamastex/spark-trend-calculus-examples
 
+## Usage
+
+See Antoine's GitHub for details on how to use his implementation of Trend Calculus, mainly contained in [`TrendCalculus.scala`](src/main/scala/org/lamastex/spark/trendcalculus/TrendCalculus.scala).
+
+The scalable and streamable implementation in Apache Spark is given in [`TrendCalculus2.scala`](src/main/scala/org/lamastex/spark/trendcalculus/TrendCalculus2.scala).
+
+The basic use case is to transform the input time series to a `Dataset[org.lamastex.spark.trendcalculus.TickerPoint]` where `TickerPoint` is a case class in [`Point.scala`](src/main/scala/org/lamastex/spark/trendcalculus/Point.scala) consisting of a ticker `ticker` (`String`), a timestamp `x` (`java.sql.Timestamp`) and a value `y` (`Double`).
+
+This `Dataset` is then used in the constructor of a `TrendCalculus2` object together with a window size (minimum 2) and a `SparkSession` object. 
+
+The `TrendCalculus2` object has a method `reversals` that can be called to (lazily) compute the reversals using the Trend Calculus algorithm.
+
+Given input as the DataFrame `inputDF` with columns `ticker`, `x`, `y`, the whole call looks like 
+
+```
+import org.lamastex.spark.trendcalculus._
+
+val spark: SparkSession = ...
+val inputDF: DataFrame = ...
+val windowSize: Int = ...
+
+val reversalDS = new TrendCalculus2(inputDF.select("ticker", "x", "y").as[TickerPoint], windowSize, spark).reversals
+```
+
+This also works when `inputDF` is a streaming DataFrame using Spark Structured Streaming.
+
+For more detailed examples, see https://github.com/lamastex/spark-trend-calculus-examples.
+
 ## Included parsers
 
 Parsers for 1-minute foreign exchange data (https://github.com/philipperemy/FX-1-Minute-Data) and stock market data from yfinance (https://github.com/ranaroussi/yfinance). The data from yfinance requires some processing in python before being accepted by the parser.
