@@ -2,9 +2,9 @@ package org.lamastex.spark.trendcalculus
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-trait SparkSpec extends FunSuite {
+trait SparkSpec extends AnyFunSuite {
 
   Logger.getLogger("org").setLevel(Level.OFF)
   Logger.getLogger("akka").setLevel(Level.OFF)

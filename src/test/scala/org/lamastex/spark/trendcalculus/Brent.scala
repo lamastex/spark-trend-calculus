@@ -1,6 +1,7 @@
 package org.lamastex.spark.trendcalculus
 
-import org.scalatest.Matchers
+import org.scalatest._
+import matchers.should._
 
 import scala.io.Source
 
@@ -15,6 +16,10 @@ class BrentTest extends SparkSpec with Matchers {
 
     import org.lamastex.spark.trendcalculus._
 
+    def stringToDateLong(s: String): Long = {
+      new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s).getTime
+    }
+
     val dateUDF = udf((s: String) => new java.sql.Date(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s).getTime))
     val valueUDF = udf((s: String) => s.toDouble)
 
@@ -26,7 +31,7 @@ class BrentTest extends SparkSpec with Matchers {
 
     assert(DF.count == 532)
 
-    val trendDF = DF.rdd.map(r => ("DUMMY", Point(r.getAs[java.sql.Date]("DATE").getTime, r.getAs[Double]("VALUE")))).groupByKey().mapValues(it => {
+    val trendDF = DF.rdd.map(r => ("DUMMY", Point(stringToDateLong(r.getAs[String]("DATE")), r.getAs[Double]("VALUE")))).groupByKey().mapValues(it => {
       val series = it.toArray.sortBy(_.x)
       SeriesUtils.completeSeries(series, Frequency.DAY, FillingStrategy.LOCF)
     }).flatMap({ case ((s), series) =>
