@@ -1,6 +1,7 @@
 package org.lamastex.spark.trendcalculus
 
-import org.scalatest.Matchers
+import org.scalatest._
+import matchers.should._
 
 class ScalableTest extends SparkSpec with Matchers {
 
@@ -20,9 +21,12 @@ class ScalableTest extends SparkSpec with Matchers {
       .csv(filePathRoot+"brent.csv")
       .filter(year(col("DATE")) >= 2016)
 
+    def stringToTimestampUDF = udf((s: String) => new java.sql.Timestamp(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s).getTime))
+
     val pointDS = df
       .withColumn("ticker", lit("brent"))
-      .select($"ticker", $"DATE" as "x", $"VALUE" as "y")
+      .withColumn("x", stringToTimestampUDF($"DATE"))
+      .select($"ticker", $"x" , $"VALUE" as "y")
       .as[TickerPoint]
 
     pointDS.show

@@ -1,6 +1,7 @@
 package org.lamastex.spark.trendcalculus
 
-import org.scalatest.Matchers
+import org.scalatest._
+import matchers.should._
 import scala.io.Source
 import org.lamastex.spark.trendcalculus._
 
