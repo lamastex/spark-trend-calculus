@@ -4,7 +4,7 @@ How to cite this work:
 
 - Graner, Nilsson and Sainudiin (2020-2021). A Scalable Library for Trader-Perceived Financial Events in an Inter-valued Time Series for a Trend-Calculus. https://github.com/lamastex/spark-trend-calculus/
 
-Many thanks to Andrew Morgan and Antoinne Amend.
+Many thanks to Andrew Morgan and Antoinne Amend. The work in 2020 was partly supported by Combient Mix AB through Data Engineering Science Summer Internships.
 
 To detect trends in time series using Andrew Morgan's trend calculus algorithms in Apache Spark and Scala from Antoine Amend's initial implementation.
 
