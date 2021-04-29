@@ -1,10 +1,18 @@
 # Spark-Trend-Calculus
 
-How to cite this work:
+## How to cite this work:
 
-- Antoine Amend, Johannes Graner and Raazesh Sainudiin (2020-2021). A Scalable Library for Trader-Perceived Financial Events in an Inter-valued Time Series for a Trend-Calculus. https://github.com/lamastex/spark-trend-calculus/
+- Antoine Amend, Johannes Graner and Raazesh Sainudiin (2020-2021). A Scalable Library for Trader-Perceived Financial Events in an Interval-valued Time Series for a Trend-Calculus. https://github.com/lamastex/spark-trend-calculus/
 
-Many thanks to Andrew Morgan and Antoine Amend. The work in 2020 was partly supported by Combient Mix AB through Data Engineering Science Summer Internships.
+
+## Acknowledgements
+ 
+This work was partially supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation.
+The work in 2020 was partly supported by Combient Mix AB through Data Engineering Science Summer Internships.
+
+Many thanks to Andrew Morgan and Antoine Amend. 
+
+## Quick Links
 
 To detect trends in time series using Andrew Morgan's trend calculus algorithms in Apache Spark and Scala from Antoine Amend's initial implementation.
 
@@ -22,7 +30,7 @@ Example use cases:
 - https://github.com/lamastex/spark-gdelt-examples
 - https://github.com/lamastex/spark-trend-calculus-examples
 
-## Usage
+## Usage Abstract
 
 See Antoine's GitHub for details on how to use his implementation of Trend Calculus, mainly contained in [`TrendCalculus.scala`](src/main/scala/org/lamastex/spark/trendcalculus/TrendCalculus.scala).
 
