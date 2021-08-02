@@ -2,7 +2,7 @@
 
 ## How to cite this work:
 
-- Antoine Amend, Johannes Graner and Raazesh Sainudiin (2020-2021). A Scalable Library for Trader-Perceived Financial Events in an Interval-valued Time Series for a Trend-Calculus. https://github.com/lamastex/spark-trend-calculus/
+- Antoine Amend, Johannes Graner, Andrew Morgan and Raazesh Sainudiin (2020-2021). A Scalable Library for Trader-Perceived Financial Events in an Interval-valued Time Series for a Trend-Calculus. https://github.com/lamastex/spark-trend-calculus/
 
 
 ## Acknowledgements
