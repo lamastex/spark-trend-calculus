@@ -2,6 +2,7 @@ package org.lamastex.spark.trendcalculus
 
 import org.scalatest._
 import matchers.should._
+import scala.language.postfixOps
 
 class ScalableTest extends SparkSpec with Matchers {
 
