@@ -104,10 +104,10 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
 
   private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[Seq[TrendCalculus2.State]]): Iterator[Reversal] = {
     
-    val values: Seq[TickerPoint] = inputs.toSeq
+    val values: Seq[TickerPoint] = inputs.toSeq.sortBy(_.x.getTime)
 
     var initialState = TrendCalculus2.State(
-        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
+        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.head)),
         lastTrend = 0,
         buffer = Seq[TickerPoint]()
       )
@@ -119,23 +119,26 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     var allReversals = Seq[Reversal]()
     var resPair = processBuffer(oldState.head, if (state.getOption.isEmpty && !initZero) values.tail else values)
     reversalStates = reversalStates :+ resPair._1
-    reversalSeq = resPair._2
+    reversalSeq = resPair._2.sortBy(_.tickerPoint.x.getTime)
     allReversals = allReversals ++ reversalSeq
 
     var i = 1
     // add new reversal order state if there are any reversals of one order lower
     while ( reversalSeq.nonEmpty ) {
-      initialState = initialState.copy(
-        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(reversalSeq.map(_.tickerPoint).sortBy(_.x.getTime).head))
-      )
 
-      resPair = if (oldState.length > i && initZero)
-          processBuffer(oldState(i), reversalSeq.map(_.tickerPoint))
-        else
-          processBuffer(initialState, reversalSeq.map(_.tickerPoint).tail)
+      resPair = if (oldState.length > i)
+        processBuffer(oldState(i), reversalSeq.map(_.tickerPoint))
+      else {
+        // initialize new reversal order
+        initialState = initialState.copy(
+          lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(reversalSeq.map(_.tickerPoint).head))
+        )
+
+        processBuffer(initialState, if (initZero) reversalSeq.map(_.tickerPoint).tail else reversalSeq.map(_.tickerPoint))
+      }
 
       reversalStates = reversalStates :+ resPair._1
-      reversalSeq = resPair._2.map(rev => rev.copy(reversal = rev.reversal * (i + 1)))
+      reversalSeq = resPair._2.map(rev => rev.copy(reversal = rev.reversal * (i + 1))).sortBy(_.tickerPoint.x.getTime)
       allReversals = allReversals ++ reversalSeq
       i += 1
     }
