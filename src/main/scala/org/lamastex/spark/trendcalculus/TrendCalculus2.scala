@@ -79,7 +79,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     }
   }
 
-  def processBuffer(oldState: TrendCalculus2.State, values: Seq[TickerPoint]): (TrendCalculus2.State, Seq[Reversal]) = {
+  private def processBuffer(oldState: TrendCalculus2.State, values: Seq[TickerPoint]): (TrendCalculus2.State, Seq[Reversal]) = {
     
     val buffer: Seq[TickerPoint] = (oldState.buffer ++ values).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
     val toFHLS = buffer.dropRight(buffer.length % windowSize) // need multiple of windowsize to make fhls of size windowsize
