@@ -79,13 +79,6 @@ class ScalableTest extends SparkSpec with Matchers {
     val parquetPath = "src/test/tmp/parquet"
     val checkpointPath = "src/test/tmp/parquet"
 
-    try {
-      new TrendCalculus2(pointDS, windowSize, spark).nReversalsJoined(n)
-      fail()
-    } catch {
-      case _: IllegalArgumentException => {}
-    }
-
     val testStream = new TrendCalculus2(pointDS, windowSize, spark)
       .reversals
       .writeStream
