@@ -40,15 +40,15 @@ class ScalableTest extends SparkSpec with Matchers {
 
     val reversalTS = tc.reversals
     val reversalTS2 = tc2.reversals
-    reversalTS.show(false)
-    reversalTS2.show(false)
+    reversalTS.orderBy($"tickerPoint.x").show(false)
+    reversalTS2.orderBy($"tickerPoint.x").show(false)
 
-    val nReversalTSs = tc.nReversalsJoinedWithMaxRev(n)
-    nReversalTSs.show(false)
+    // val nReversalTSs = tc.nReversalsJoinedWithMaxRev(n)
+    // nReversalTSs.show(false)
   }
 
   // Test that stream also works
-  sparkTest("Streamable Trend Calculus") { spark =>
+  /* sparkTest("Streamable Trend Calculus") { spark =>
 
     import org.apache.spark.sql.types._
     import org.apache.spark.sql.functions._
@@ -98,6 +98,7 @@ class ScalableTest extends SparkSpec with Matchers {
 
     spark.read.schema(reversalSchema).parquet(parquetPath).show(false)
     "src/test/scala/org/lamastex/spark/trendcalculus/cleanTmp.sh" !!
-  }
+  }*/
 }
+ 
 

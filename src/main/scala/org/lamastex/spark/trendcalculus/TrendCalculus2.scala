@@ -104,17 +104,48 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     
     val values: Seq[TickerPoint] = inputs.toSeq
 
-    val initialState = Seq(TrendCalculus2.State(
+    var initialState = TrendCalculus2.State(
         lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
         lastTrend = 0,
         buffer = Seq[TickerPoint]()
-      ))
+      )
 
-    val oldState: TrendCalculus2.State = state.getOption.getOrElse(initialState).head
+    val oldState: Seq[TrendCalculus2.State] = state.getOption.getOrElse(Seq(initialState))
 
-    val (newState, reversalSeq) = processBuffer(oldState, if (state.getOption.isEmpty && !initZero) values.tail else values)
-    state.update(Seq(newState))
-    reversalSeq.toIterator
+    var reversalStates = Seq[TrendCalculus2.State]()
+    var reversalSeq = Seq[Reversal]()
+    var allReversals = Seq[Reversal]()
+    var resPair = processBuffer(oldState.head, if (state.getOption.isEmpty && !initZero) values.tail else values)
+    reversalStates = reversalStates :+ resPair._1
+    reversalSeq = resPair._2
+    allReversals = allReversals ++ reversalSeq
+
+    var i = 1
+    // add new reversal order state if there are any reversals of one order lower
+    while ( reversalSeq.nonEmpty ) {
+      initialState = initialState.copy(
+        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(reversalSeq.map(_.tickerPoint).sortBy(_.x.getTime).head))
+      )
+
+      resPair = if (oldState.length > i)
+          processBuffer(oldState(i), reversalSeq.map(_.tickerPoint))
+        else
+          processBuffer(initialState, reversalSeq.map(_.tickerPoint).tail)
+
+      reversalStates = reversalStates :+ resPair._1
+      reversalSeq = resPair._2.map(rev => rev.copy(reversal = rev.reversal * (i + 1)))
+      allReversals = allReversals ++ reversalSeq
+      i += 1
+    }
+
+    val highestOrderReversals = (values.map(Reversal(_, 0)) ++ allReversals)
+      .groupBy(_.tickerPoint)
+      .values
+      .map(revSeq => revSeq.maxBy(revPoint => math.abs(revPoint.reversal)))
+      .toSeq
+
+    state.update(reversalStates)
+    highestOrderReversals.toIterator
  }
 
   private def getReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
@@ -124,6 +155,11 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
         outputMode = OutputMode.Append,
         timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
       .filter($"tickerPoint.ticker" =!= "")
+      .withColumn("revSign", signum($"reversal"))
+      .groupBy($"tickerPoint", $"revSign")
+      .agg((max(abs($"reversal")) * $"revSign").cast("int").as("reversal"))
+      .drop($"revSign")
+      .as[Reversal]
       
   }
 
