@@ -79,19 +79,9 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     }
   }
 
-  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[TrendCalculus2.State]): Iterator[Reversal] = {
+  def processBuffer(oldState: TrendCalculus2.State, values: Seq[TickerPoint]): (TrendCalculus2.State, Seq[Reversal]) = {
     
-    val values: Seq[TickerPoint] = inputs.toSeq
-
-    val initialState = TrendCalculus2.State(
-        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
-        lastTrend = 0,
-        buffer = Seq[TickerPoint]()
-      )
-
-    val oldState: TrendCalculus2.State = state.getOption.getOrElse(initialState)
-    
-    val buffer: Seq[TickerPoint] = (oldState.buffer ++ (if (state.getOption.isEmpty && !initZero) values.tail else values)).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
+    val buffer: Seq[TickerPoint] = (oldState.buffer ++ values).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
     val toFHLS = buffer.dropRight(buffer.length % windowSize) // need multiple of windowsize to make fhls of size windowsize
     val remainingBuffer = buffer.takeRight(buffer.length % windowSize) // remaining part of buffer, is sent to next state
     
@@ -102,19 +92,35 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     
     val fhlsWithTrendSeq = fhlsSeq.scanLeft(Seq(lastFHLSWithTrend))(getIntrAndTrends).flatten.toSeq
     
-    val reversalIter = fhlsWithTrendSeq.sliding(2,1).flatMap(ls => trendToRev(ls.head, ls.last))
+    val reversalSeq = fhlsWithTrendSeq.sliding(2,1).flatMap(ls => trendToRev(ls.head, ls.last)).toSeq
     
     val newLastFHLSWithTrend = fhlsWithTrendSeq.last
     val newState = TrendCalculus2.State(newLastFHLSWithTrend.fhls, newLastFHLSWithTrend.trend, remainingBuffer)
-    state.update(newState)
     
-    reversalIter
+    (newState, reversalSeq)
   }
+
+  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[Seq[TrendCalculus2.State]]): Iterator[Reversal] = {
+    
+    val values: Seq[TickerPoint] = inputs.toSeq
+
+    val initialState = Seq(TrendCalculus2.State(
+        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
+        lastTrend = 0,
+        buffer = Seq[TickerPoint]()
+      ))
+
+    val oldState: TrendCalculus2.State = state.getOption.getOrElse(initialState).head
+
+    val (newState, reversalSeq) = processBuffer(oldState, if (state.getOption.isEmpty && !initZero) values.tail else values)
+    state.update(Seq(newState))
+    reversalSeq.toIterator
+ }
 
   private def getReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
     ts
       .groupByKey{ tp => tp.ticker }
-      .flatMapGroupsWithState[TrendCalculus2.State, Reversal](
+      .flatMapGroupsWithState[Seq[TrendCalculus2.State], Reversal](
         outputMode = OutputMode.Append,
         timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
       .filter($"tickerPoint.ticker" =!= "")
