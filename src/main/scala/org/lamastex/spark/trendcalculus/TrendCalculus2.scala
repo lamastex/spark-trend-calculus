@@ -134,7 +134,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
           lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(reversalSeq.map(_.tickerPoint).head))
         )
 
-        processBuffer(initialState, if (initZero) reversalSeq.map(_.tickerPoint).tail else reversalSeq.map(_.tickerPoint))
+        processBuffer(initialState, if (!initZero) reversalSeq.map(_.tickerPoint).tail else reversalSeq.map(_.tickerPoint))
       }
 
       reversalStates = reversalStates :+ resPair._1
