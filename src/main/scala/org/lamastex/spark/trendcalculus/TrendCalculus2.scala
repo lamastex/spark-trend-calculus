@@ -136,6 +136,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
       }
 
       reversalStates = reversalStates :+ resPair._1
+      // reversals have the right order
       reversalSeq = resPair._2.map(rev => rev.copy(reversal = rev.reversal * (i + 1))).sortBy(_.tickerPoint.x.getTime)
       allReversals = allReversals ++ reversalSeq
       i += 1
