@@ -18,6 +18,8 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode, Trigger}
 import java.sql.Timestamp
+import org.sparkproject.jetty.util.DateCache.Tick
+import avro.shaded.com.google.common.base.Ticker
 
 class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: SparkSession, initZero: Boolean = true) extends Serializable {
 
@@ -127,7 +129,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
         lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(reversalSeq.map(_.tickerPoint).sortBy(_.x.getTime).head))
       )
 
-      resPair = if (oldState.length > i)
+      resPair = if (oldState.length > i && initZero)
           processBuffer(oldState(i), reversalSeq.map(_.tickerPoint))
         else
           processBuffer(initialState, reversalSeq.map(_.tickerPoint).tail)
@@ -143,6 +145,7 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
       .values
       .map(revSeq => revSeq.maxBy(revPoint => math.abs(revPoint.reversal)))
       .toSeq
+      .sortBy(_.tickerPoint.x.getTime)
 
     state.update(reversalStates)
     highestOrderReversals.toIterator
@@ -160,10 +163,21 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
       .agg((max(abs($"reversal")) * $"revSign").cast("int").as("reversal"))
       .drop($"revSign")
       .as[Reversal]
-      
   }
 
-  def reversals: Dataset[Reversal] = getReversals(timeseries)
+  private def getStreamReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
+    ts
+      .groupByKey{ tp => tp.ticker }
+      .flatMapGroupsWithState[Seq[TrendCalculus2.State], Reversal](
+        outputMode = OutputMode.Append,
+        timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
+      .filter($"tickerPoint.ticker" =!= "")
+      .as[Reversal]
+
+  }
+
+  // If there is a streaming dataset, the final aggregation is omitted.
+  def reversals: Dataset[Reversal] = if (timeseries.isStreaming) getStreamReversals(timeseries) else getReversals(timeseries)
 
   def nReversals(numReversals: Int): Seq[Dataset[Reversal]] = {
     var tmpDSs: Seq[Dataset[Reversal]] = Seq(reversals)
