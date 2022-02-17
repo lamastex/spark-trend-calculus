@@ -182,39 +182,6 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
   // If there is a streaming dataset, the final aggregation is omitted.
   def reversals: Dataset[Reversal] = if (timeseries.isStreaming) getStreamReversals(timeseries) else getReversals(timeseries)
 
-  def nReversals(numReversals: Int): Seq[Dataset[Reversal]] = {
-    var tmpDSs: Seq[Dataset[Reversal]] = Seq(reversals)
-    for (i <- (2 to numReversals)) {
-      tmpDSs = tmpDSs :+ getReversals(tmpDSs.last.toDF.select($"tickerPoint.ticker", $"tickerPoint.x", $"tickerPoint.y").as[TickerPoint])
-    }
-
-    tmpDSs
-  }
-
-  def nReversalsJoined(numReversals: Int): DataFrame = {
-    if (timeseries.isStreaming) throw new IllegalArgumentException("Not supported on streaming dataframes.")
-    val revDSs = nReversals(numReversals)
-    revDSs.map(_.cache.count)
-    val joinedDF = revDSs
-      .zipWithIndex
-      .map{ case (ds: Dataset[Reversal], i: Int) => ds.toDF.withColumnRenamed("reversal", s"reversal${i+1}") }
-      .foldLeft(timeseries.toDF)( (acc: DataFrame, ds: DataFrame) => acc.join(ds, $"ticker" === $"tickerPoint.ticker" && $"x" === $"tickerPoint.x", "left").drop("tickerPoint") )
-    joinedDF
-  }
-
-  def nReversalsJoinedWithMaxRev(numReversals: Int): DataFrame = {
-    if (timeseries.isStreaming) throw new IllegalArgumentException("Not supported on streaming dataframes.")
-
-    val joinedDF = nReversalsJoined(numReversals)
-
-    val dfWithMaxRev = joinedDF.map{ r =>
-      val maxRev: Int = (3 to numReversals+2).find(r.isNullAt(_)).getOrElse(numReversals+3) - 3
-      (r.getString(0), r.getAs[Timestamp](1),maxRev)
-    }.toDF("tickerTmp", "xTmp","maxRev")
-
-    val joinedDFWithMaxRev = joinedDF.join(dfWithMaxRev, $"ticker" === $"tickerTmp" && $"x" === $"xTmp").drop("tickerTmp", "xTmp").orderBy("x")
-    joinedDFWithMaxRev
-  }
 }
 
 object TrendCalculus2 {
