@@ -47,8 +47,6 @@ class ScalableTest extends SparkSpec with Matchers {
     reversalTS.orderBy($"tickerPoint.x").show(false)
     reversalTS2.orderBy($"tickerPoint.x").show(false)
 
-    // val nReversalTSs = tc.nReversalsJoinedWithMaxRev(n)
-    // nReversalTSs.show(false)
   }
 
   // Test that stream also works
