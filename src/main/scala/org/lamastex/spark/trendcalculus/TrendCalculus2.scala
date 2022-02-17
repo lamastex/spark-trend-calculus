@@ -18,8 +18,6 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode, Trigger}
 import java.sql.Timestamp
-import org.sparkproject.jetty.util.DateCache.Tick
-import avro.shaded.com.google.common.base.Ticker
 
 class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: SparkSession, initZero: Boolean = true) extends Serializable {
 
