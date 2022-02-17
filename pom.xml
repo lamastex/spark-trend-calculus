@@ -7,7 +7,7 @@
     <groupId>org.lamastex.spark</groupId>
     <artifactId>TrendCalculus-2020</artifactId>
     <packaging>jar</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
   <url>https://github.com/lamastex/spark-trend-calculus</url>
   <description>Trend Calculus in Spark</description>
   <inceptionYear>2017</inceptionYear>
