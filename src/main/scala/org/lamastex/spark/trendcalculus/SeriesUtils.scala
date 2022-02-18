@@ -3,7 +3,7 @@ package org.lamastex.spark.trendcalculus
 object SeriesUtils {
 
   def movingAverage(timeseries: Array[Point], grouping: Frequency.Value): Unit = {
-    timeseries.groupBy(p => DateUtils.roundTime(grouping, p.x)).flatMap({ case (group, groupedSeries) =>
+    timeseries.groupBy(p => DateUtils.roundTime(grouping, p.x)).flatMap[Point]({ case (group, groupedSeries) =>
       val avg = groupedSeries.map(_.y).sum / groupedSeries.length
       groupedSeries.map(p => {
         Point(p.x, avg)
