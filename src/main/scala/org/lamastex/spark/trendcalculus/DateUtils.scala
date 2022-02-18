@@ -44,7 +44,7 @@ object DateUtils {
   def indices(fq: Frequency.Value, fromTime: Long, toTime: Long): List[Long] = {
     var from = new DateTime(DateUtils.roundTime(fq, fromTime))
     val to = new DateTime(DateUtils.roundTime(fq, toTime))
-    val indices = collection.mutable.MutableList[Long]()
+    val indices = collection.mutable.ArrayDeque[Long]()
     while (from.isBefore(to)) {
       indices += from.toDate.getTime
       from = fq match {
