@@ -29,6 +29,10 @@ class ScalableTest extends SparkSpec with Matchers {
       .withColumn("x", stringToTimestampUDF($"DATE"))
       .select($"ticker", $"x" , $"VALUE" as "y")
       .as[TickerPoint]
+      .rdd
+      .repartition(1000)
+      .toDS
+      .orderBy($"x")
 
     pointDS.show
 
@@ -40,11 +44,9 @@ class ScalableTest extends SparkSpec with Matchers {
 
     val reversalTS = tc.reversals
     val reversalTS2 = tc2.reversals
-    reversalTS.show(false)
-    reversalTS2.show(false)
+    reversalTS.orderBy($"tickerPoint.x").show(false)
+    reversalTS2.orderBy($"tickerPoint.x").show(false)
 
-    val nReversalTSs = tc.nReversalsJoinedWithMaxRev(n)
-    nReversalTSs.show(false)
   }
 
   // Test that stream also works
@@ -75,17 +77,10 @@ class ScalableTest extends SparkSpec with Matchers {
     val parquetPath = "src/test/tmp/parquet"
     val checkpointPath = "src/test/tmp/parquet"
 
-    try {
-      new TrendCalculus2(pointDS, windowSize, spark).nReversalsJoined(n)
-      fail()
-    } catch {
-      case _: IllegalArgumentException => {}
-    }
-
     val testStream = new TrendCalculus2(pointDS, windowSize, spark)
-      .nReversals(n)
-      .last
+      .reversals
       .writeStream
+      .outputMode("append")
       .format("parquet")
       .option("path", parquetPath)
       .option("checkpointLocation", checkpointPath)
@@ -96,8 +91,9 @@ class ScalableTest extends SparkSpec with Matchers {
     val tickerSchema = new StructType().add("ticker", "string").add("x", "timestamp").add("y", "double")
     val reversalSchema = new StructType().add("tickerPoint", tickerSchema).add("reversal", "int")
 
-    spark.read.schema(reversalSchema).parquet(parquetPath).show(false)
+    spark.read.schema(reversalSchema).parquet(parquetPath).orderBy($"tickerPoint.x").show(false)
     "src/test/scala/org/lamastex/spark/trendcalculus/cleanTmp.sh" !!
   }
 }
+ 
 

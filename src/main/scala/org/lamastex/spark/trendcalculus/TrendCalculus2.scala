@@ -79,19 +79,9 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     }
   }
 
-  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[TrendCalculus2.State]): Iterator[Reversal] = {
+  private def processBuffer(oldState: TrendCalculus2.State, values: Seq[TickerPoint]): (TrendCalculus2.State, Seq[Reversal]) = {
     
-    val values: Seq[TickerPoint] = inputs.toSeq
-
-    val initialState = TrendCalculus2.State(
-        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.sortBy(_.x.getTime).head)),
-        lastTrend = 0,
-        buffer = Seq[TickerPoint]()
-      )
-
-    val oldState: TrendCalculus2.State = state.getOption.getOrElse(initialState)
-    
-    val buffer: Seq[TickerPoint] = (oldState.buffer ++ (if (state.getOption.isEmpty && !initZero) values.tail else values)).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
+    val buffer: Seq[TickerPoint] = (oldState.buffer ++ values).sortBy(_.x.getTime) // merging buffered points and new input points and sorting to get right order
     val toFHLS = buffer.dropRight(buffer.length % windowSize) // need multiple of windowsize to make fhls of size windowsize
     val remainingBuffer = buffer.takeRight(buffer.length % windowSize) // remaining part of buffer, is sent to next state
     
@@ -102,60 +92,95 @@ class TrendCalculus2(timeseries: Dataset[TickerPoint], windowSize: Int, spark: S
     
     val fhlsWithTrendSeq = fhlsSeq.scanLeft(Seq(lastFHLSWithTrend))(getIntrAndTrends).flatten.toSeq
     
-    val reversalIter = fhlsWithTrendSeq.sliding(2,1).flatMap(ls => trendToRev(ls.head, ls.last))
+    val reversalSeq = fhlsWithTrendSeq.sliding(2,1).flatMap(ls => trendToRev(ls.head, ls.last)).toSeq
     
     val newLastFHLSWithTrend = fhlsWithTrendSeq.last
     val newState = TrendCalculus2.State(newLastFHLSWithTrend.fhls, newLastFHLSWithTrend.trend, remainingBuffer)
-    state.update(newState)
     
-    reversalIter
+    (newState, reversalSeq)
   }
+
+  private def reversalMap(key: String, inputs: Iterator[TickerPoint], state: GroupState[Seq[TrendCalculus2.State]]): Iterator[Reversal] = {
+    
+    val values: Seq[TickerPoint] = inputs.toSeq.sortBy(_.x.getTime)
+
+    var initialState = TrendCalculus2.State(
+        lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(values.head)),
+        lastTrend = 0,
+        buffer = Seq[TickerPoint]()
+      )
+
+    val oldState: Seq[TrendCalculus2.State] = state.getOption.getOrElse(Seq(initialState))
+
+    var reversalStates = Seq[TrendCalculus2.State]()
+    var reversalSeq = Seq[Reversal]()
+    var allReversals = Seq[Reversal]()
+    var resPair = processBuffer(oldState.head, if (state.getOption.isEmpty && !initZero) values.tail else values)
+    reversalStates = reversalStates :+ resPair._1
+    reversalSeq = resPair._2.sortBy(_.tickerPoint.x.getTime)
+    allReversals = allReversals ++ reversalSeq
+
+    var i = 1
+    // add new reversal order state if there are any reversals of one order lower
+    while ( reversalSeq.nonEmpty ) {
+
+      resPair = if (oldState.length > i)
+        processBuffer(oldState(i), reversalSeq.map(_.tickerPoint))
+      else {
+        // initialize new reversal order
+        initialState = initialState.copy(
+          lastFHLS = if (initZero) emptyFHLS else makeFHLS(Seq(reversalSeq.map(_.tickerPoint).head))
+        )
+
+        processBuffer(initialState, if (!initZero) reversalSeq.map(_.tickerPoint).tail else reversalSeq.map(_.tickerPoint))
+      }
+
+      reversalStates = reversalStates :+ resPair._1
+      // reversals have the right order
+      reversalSeq = resPair._2.map(rev => rev.copy(reversal = rev.reversal * (i + 1))).sortBy(_.tickerPoint.x.getTime)
+      allReversals = allReversals ++ reversalSeq
+      i += 1
+    }
+
+    val highestOrderReversals = (values.map(Reversal(_, 0)) ++ allReversals)
+      .groupBy(_.tickerPoint)
+      .values
+      .map(revSeq => revSeq.maxBy(revPoint => math.abs(revPoint.reversal)))
+      .toSeq
+      .sortBy(_.tickerPoint.x.getTime)
+
+    state.update(reversalStates)
+    highestOrderReversals.toIterator
+ }
 
   private def getReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
     ts
       .groupByKey{ tp => tp.ticker }
-      .flatMapGroupsWithState[TrendCalculus2.State, Reversal](
+      .flatMapGroupsWithState[Seq[TrendCalculus2.State], Reversal](
         outputMode = OutputMode.Append,
         timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
       .filter($"tickerPoint.ticker" =!= "")
-      
+      .withColumn("revSign", signum($"reversal"))
+      .groupBy($"tickerPoint", $"revSign")
+      .agg((max(abs($"reversal")) * $"revSign").cast("int").as("reversal"))
+      .drop($"revSign")
+      .as[Reversal]
   }
 
-  def reversals: Dataset[Reversal] = getReversals(timeseries)
+  private def getStreamReversals(ts: Dataset[TickerPoint]): Dataset[Reversal] = {
+    ts
+      .groupByKey{ tp => tp.ticker }
+      .flatMapGroupsWithState[Seq[TrendCalculus2.State], Reversal](
+        outputMode = OutputMode.Append,
+        timeoutConf = GroupStateTimeout.NoTimeout)(reversalMap)
+      .filter($"tickerPoint.ticker" =!= "")
+      .as[Reversal]
 
-  def nReversals(numReversals: Int): Seq[Dataset[Reversal]] = {
-    var tmpDSs: Seq[Dataset[Reversal]] = Seq(reversals)
-    for (i <- (2 to numReversals)) {
-      tmpDSs = tmpDSs :+ getReversals(tmpDSs.last.toDF.select($"tickerPoint.ticker", $"tickerPoint.x", $"tickerPoint.y").as[TickerPoint])
-    }
-
-    tmpDSs
   }
 
-  def nReversalsJoined(numReversals: Int): DataFrame = {
-    if (timeseries.isStreaming) throw new IllegalArgumentException("Not supported on streaming dataframes.")
-    val revDSs = nReversals(numReversals)
-    revDSs.map(_.cache.count)
-    val joinedDF = revDSs
-      .zipWithIndex
-      .map{ case (ds: Dataset[Reversal], i: Int) => ds.toDF.withColumnRenamed("reversal", s"reversal${i+1}") }
-      .foldLeft(timeseries.toDF)( (acc: DataFrame, ds: DataFrame) => acc.join(ds, $"ticker" === $"tickerPoint.ticker" && $"x" === $"tickerPoint.x", "left").drop("tickerPoint") )
-    joinedDF
-  }
+  // If there is a streaming dataset, the final aggregation is omitted.
+  def reversals: Dataset[Reversal] = if (timeseries.isStreaming) getStreamReversals(timeseries) else getReversals(timeseries)
 
-  def nReversalsJoinedWithMaxRev(numReversals: Int): DataFrame = {
-    if (timeseries.isStreaming) throw new IllegalArgumentException("Not supported on streaming dataframes.")
-
-    val joinedDF = nReversalsJoined(numReversals)
-
-    val dfWithMaxRev = joinedDF.map{ r =>
-      val maxRev: Int = (3 to numReversals+2).find(r.isNullAt(_)).getOrElse(numReversals+3) - 3
-      (r.getString(0), r.getAs[Timestamp](1),maxRev)
-    }.toDF("tickerTmp", "xTmp","maxRev")
-
-    val joinedDFWithMaxRev = joinedDF.join(dfWithMaxRev, $"ticker" === $"tickerTmp" && $"x" === $"xTmp").drop("tickerTmp", "xTmp").orderBy("x")
-    joinedDFWithMaxRev
-  }
 }
 
 object TrendCalculus2 {
